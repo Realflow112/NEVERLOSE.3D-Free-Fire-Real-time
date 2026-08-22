@@ -570,7 +570,6 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-300 mb-2">รหัสผ่าน (Password)</label>
                     <input type="password" id="login-password" required placeholder="ป้อนรหัสผ่าน" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
-                    <p class="text-[10px] text-gray-500 mt-1">แอดมิน: ชื่อ <span class="text-cyan-400 font-mono">neverlose3d</span> — รหัส Firebase Auth หรือรหัสสำรอง <span class="text-cyan-400 font-mono">1234567890</span></p>
                 </div>
 
                 <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 via-blue-600 to-cyan-500 hover:from-cyan-300 hover:to-blue-500 text-black font-extrabold py-3.5 rounded-xl text-base shadow-md">
@@ -736,8 +735,8 @@
 
         // Registered Users Database
         const DEFAULT_USERS = [
-            { userId: 'NVL-1001', username: 'Devreal', pass: '1005', role: 'admin', uid: '999999999', ig: '@devreal_admin', gender: 'ชาย', avatar: '🛡️' },
-            { userId: 'NVL-1002', username: 'NEVERLOSE_BOSS', pass: '1234', role: 'user', uid: '984512304', ig: '@neverlose_boss', gender: 'ชาย', avatar: '👑' },
+            { userId: 'NVL-9999', username: 'Devreal', pass: '1005', role: 'admin', uid: '999999999', ig: '@devreal_admin', gender: 'ชาย', avatar: '🛡️' },
+            { userId: 'NVL-1001', username: 'NEVERLOSE_BOSS', pass: '1234', role: 'user', uid: '984512304', ig: '@neverlose_boss', gender: 'ชาย', avatar: '👑' },
             { userId: 'NVL-1004', username: 'Ghost_Rusher', pass: '1234', role: 'user', uid: '881230491', ig: '@ghost_ff', gender: 'ชาย', avatar: '🎯' }
         ];
 
@@ -781,9 +780,7 @@
         let currentRoleFilter = 'ALL';
 
         // Save State to LocalStorage
-        function saveState(opts) {
-            // opts: { syncMembers, syncTryouts, syncChats, syncUsers, removeTryoutId, addTryout, addChat }
-            opts = opts || {};
+        function saveState() {
             localStorage.setItem('neverlose_members', JSON.stringify(members));
             localStorage.setItem('neverlose_tryouts', JSON.stringify(tryouts));
             localStorage.setItem('neverlose_users', JSON.stringify(registeredUsers));
@@ -791,114 +788,33 @@
             localStorage.setItem('neverlose_current_user', JSON.stringify(currentUser));
             updateStats();
 
-            // ซิงค์แบบเจาะจง — ไม่ทับทั้งก้อนด้วยข้อมูลเครื่องที่ล้าสมัย
-            if (!window.NVL_FIREBASE_SYNC) return;
-            const S = window.NVL_FIREBASE_SYNC;
-            if (opts.addTryout) S.upsertTryout(opts.addTryout);
-            if (opts.removeTryoutId != null) S.removeTryout(opts.removeTryoutId);
-            if (opts.addChat) S.upsertChat(opts.addChat);
-            if (opts.syncMembers) S.syncMembers(members);
-            if (opts.syncUsers) S.syncUsers(registeredUsers);
-            if (opts.clearChats) S.clearChats();
-            // ถ้าไม่ระบุ opts เลย = เซฟ local อย่างเดียว (เช่น ล็อกอิน) ไม่ไปทับ Firebase
-            if (opts.syncAll) {
-                S.syncMembers(members);
-                S.syncTryoutsList(tryouts);
-                S.syncChatsList(chatMessages);
-                S.syncUsers(registeredUsers);
+            // Firebase Live Sync (จาก index1.html) — index.html ยังคงเป็นตัวหลัก
+            if (window.NVL_FIREBASE_SYNC) {
+                window.NVL_FIREBASE_SYNC.pushState({
+                    members,
+                    chatMessages
+                });
             }
         }
 
         // Bridge ให้ Firebase module อัปเดต state ของ index.html ได้อย่างปลอดภัย
-        // กู้ session แอดมินจาก Firebase Auth (หลังรีเฟรชหน้า)
-        window.NVL_APPLY_ADMIN_SESSION = function(info) {
-            if (!info || !info.firebaseUid) return;
-            currentUser = {
-                userId: 'NVL-9999',
-                username: 'Devreal',
-                role: 'admin',
-                uid: '999999999',
-                ig: '@devreal_admin',
-                avatar: '🛡️',
-                gender: 'ชาย',
-                firebaseUid: info.firebaseUid,
-                firebaseEmail: info.firebaseEmail || ''
-            };
-            localStorage.setItem('neverlose_current_user', JSON.stringify(currentUser));
-            if (typeof updateAuthUI === 'function') updateAuthUI();
-        };
-
         window.NVL_APPLY_FIREBASE_STATE = function(state) {
             if (!state) return;
-
-            if (Array.isArray(state.members)) {
-                // รวมรูปโปรไฟล์จาก local / ที่เพิ่งเซฟ กัน Firebase ทับรูป
-                const prevById = {};
-                const prevByName = {};
-                (members || []).forEach(m => {
-                    if (m.userId) prevById[m.userId] = m;
-                    if (m.name) prevByName[m.name.toLowerCase()] = m;
-                });
-                members = state.members.map(m => {
-                    const local = (m.userId && prevById[m.userId]) || (m.name && prevByName[String(m.name).toLowerCase()]);
-                    if (local && local.avatar && (
-                        String(local.avatar).startsWith('data:image/') ||
-                        String(local.avatar).startsWith('http')
-                    )) {
-                        // ถ้า remote ยังเป็น emoji แต่ local มีรูป → เก็บรูป local ไว้
-                        const remoteIsPlain = !m.avatar || (!String(m.avatar).startsWith('data:image/') && !String(m.avatar).startsWith('http'));
-                        if (remoteIsPlain) {
-                            return Object.assign({}, m, { avatar: local.avatar });
-                        }
-                    }
-                    return m;
-                });
-                // ถ้าเพิ่งเซฟโปรไฟล์ภายใน 60 วิ บังคับใช้รูปนั้น
-                const pending = window._NVL_PENDING_AVATAR;
-                if (pending && (Date.now() - pending.ts < 60000)) {
-                    members = members.map(m => {
-                        const match = (pending.userId && m.userId === pending.userId) ||
-                            (pending.name && m.name && m.name.toLowerCase() === pending.name.toLowerCase());
-                        if (match) return Object.assign({}, m, { avatar: pending.avatar, name: pending.name || m.name });
-                        return m;
-                    });
-                }
-            }
+            if (Array.isArray(state.members)) members = state.members;
             if (Array.isArray(state.chatMessages)) chatMessages = state.chatMessages;
-            if (Array.isArray(state.tryouts)) tryouts = state.tryouts;
-            if (Array.isArray(state.registeredUsers)) {
-                // รวม avatar จาก local registeredUsers เหมือนกัน
-                const prevU = {};
-                (registeredUsers || []).forEach(u => { if (u.userId) prevU[u.userId] = u; });
-                registeredUsers = state.registeredUsers.map(u => {
-                    const local = u.userId && prevU[u.userId];
-                    if (local && local.avatar && String(local.avatar).startsWith('data:image/') &&
-                        (!u.avatar || !String(u.avatar).startsWith('data:image/'))) {
-                        return Object.assign({}, u, { avatar: local.avatar });
-                    }
-                    return u;
-                });
-            }
 
             localStorage.setItem('neverlose_members', JSON.stringify(members));
             localStorage.setItem('neverlose_chat_messages', JSON.stringify(chatMessages));
-            localStorage.setItem('neverlose_tryouts', JSON.stringify(tryouts));
-            localStorage.setItem('neverlose_users', JSON.stringify(registeredUsers));
 
             if (typeof renderRoster === 'function') renderRoster();
-            if (typeof renderTryouts === 'function') renderTryouts();
             if (typeof renderAdminUserTable === 'function') renderAdminUserTable();
             if (typeof renderChatView === 'function') renderChatView();
-            if (typeof updateAuthUI === 'function') updateAuthUI();
             if (typeof updateStats === 'function') updateStats();
         };
 
         // Helper Check Admin
         function isAdminLoggedIn() {
-            if (!currentUser) return false;
-            if (currentUser.role === 'admin') return true;
-            if (currentUser.firebaseUid) return true;
-            return currentUser.username && currentUser.username.toLowerCase() === 'devreal';
+            return currentUser && currentUser.username.toLowerCase() === 'devreal';
         }
 
         // Check if current user is an approved Clan Member or Admin
@@ -1018,100 +934,41 @@
         }
 
         // Handle Login Submission
-        // อีเมลแอดมินบน Firebase Auth (สร้างใน Console: Authentication → Users)
-        const FIREBASE_ADMIN_EMAIL = 'admin@neverlose3d.app';
-        const ADMIN_USERNAMES = ['devreal', 'admin'];
-        // รหัสสำรองเมื่อยังไม่ได้ตั้ง Firebase Auth (แนะนำให้เปลี่ยนหลังเปิด Auth แล้ว)
-        const LOCAL_ADMIN_FALLBACK_PASS = '1005';
-
-        async function handleLogin(e) {
+        function handleLogin(e) {
             e.preventDefault();
             const usernameInput = document.getElementById('login-username').value.trim();
             const passwordInput = document.getElementById('login-password').value.trim();
-            if (!usernameInput || !passwordInput) {
-                showToast('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'error');
+
+            // Admin check: Devreal & 1005
+            if (usernameInput.toLowerCase() === 'devreal' && passwordInput === '1005') {
+                currentUser = { 
+                    userId: 'NVL-9999',
+                    username: 'Devreal', 
+                    role: 'admin', 
+                    uid: '999999999', 
+                    ig: '@devreal_admin', 
+                    avatar: '🛡️', 
+                    gender: 'ชาย' 
+                };
+                saveState();
+                updateAuthUI();
+                closeLoginModal();
+                showToast('ยินดีต้อนรับแอดมิน Devreal เข้าสู่ระบบ!', 'success');
+                switchTab('admin');
                 return;
             }
 
-            const isAdminAttempt = ADMIN_USERNAMES.includes(usernameInput.toLowerCase())
-                || usernameInput.toLowerCase() === FIREBASE_ADMIN_EMAIL.toLowerCase();
-
-            // —— แอดมิน ——
-            if (isAdminAttempt) {
-                // 1) ลอง Firebase Auth ก่อน
-                if (window.NVL_FIREBASE_AUTH) {
-                    try {
-                        showToast('กำลังยืนยันตัวตนแอดมินกับ Firebase...', 'info');
-                        const cred = await window.NVL_FIREBASE_AUTH.signInAdmin(FIREBASE_ADMIN_EMAIL, passwordInput);
-                        currentUser = {
-                            userId: 'NVL-9999',
-                            username: 'Devreal',
-                            role: 'admin',
-                            uid: '999999999',
-                            ig: '@devreal_admin',
-                            avatar: '🛡️',
-                            gender: 'ชาย',
-                            firebaseUid: cred.user.uid,
-                            firebaseEmail: cred.user.email
-                        };
-                        // sync avatar จาก registeredUsers ถ้ามี
-                        const adminRec = registeredUsers.find(u => (u.role === 'admin') || (u.username && u.username.toLowerCase() === 'devreal'));
-                        if (adminRec && adminRec.avatar) currentUser.avatar = adminRec.avatar;
-                        saveState();
-                        updateAuthUI();
-                        closeLoginModal();
-                        showToast('ยินดีต้อนรับแอดมิน (Firebase Auth)!', 'success');
-                        switchTab('admin');
-                        return;
-                    } catch (err) {
-                        console.warn('Firebase Admin login failed, trying local fallback...', err);
-                        // ถ้าเป็นรหัสผิดบน Firebase แต่ผู้ใช้ตั้ง Auth แล้ว — แจ้งชัด
-                        if (err && (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential')) {
-                            // ยังลอง local fallback ได้ถ้าตรงรหัสสำรอง
-                        }
-                    }
-                }
-
-                // 2) Fallback local (เมื่อยังไม่สร้าง user ใน Firebase Auth)
-                const adminRec = registeredUsers.find(u =>
-                    u.role === 'admin' || (u.username && u.username.toLowerCase() === 'devreal')
-                );
-                const localPassOk = (adminRec && adminRec.pass === passwordInput)
-                    || (passwordInput === LOCAL_ADMIN_FALLBACK_PASS);
-
-                if (localPassOk) {
-                    currentUser = {
-                        userId: (adminRec && adminRec.userId) || 'NVL-9999',
-                        username: (adminRec && adminRec.username) || 'Devreal',
-                        role: 'admin',
-                        uid: (adminRec && adminRec.uid) || '999999999',
-                        ig: (adminRec && adminRec.ig) || '@devreal_admin',
-                        avatar: (adminRec && adminRec.avatar) || '🛡️',
-                        gender: (adminRec && adminRec.gender) || 'ชาย'
-                    };
-                    saveState();
-                    updateAuthUI();
-                    closeLoginModal();
-                    showToast('เข้าสู่ระบบแอดมินแบบ Local สำเร็จ (แนะนำตั้ง Firebase Auth เพื่อความปลอดภัย)', 'success');
-                    switchTab('admin');
-                    return;
-                }
-
-                showToast('รหัสผ่านแอดมินไม่ถูกต้อง — ถ้าใช้ Firebase Auth ให้ใช้รหัสที่ตั้งใน Console', 'error');
-                return;
-            }
-
-            // —— สมาชิกทั่วไป ——
+            // Normal User check
             const foundUser = registeredUsers.find(
                 u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.pass === passwordInput
             );
 
             if (foundUser) {
-                currentUser = {
+                currentUser = { 
                     userId: foundUser.userId || generateUniqueUserId(),
-                    username: foundUser.username,
-                    role: foundUser.role || 'user',
-                    uid: foundUser.uid || '',
+                    username: foundUser.username, 
+                    role: foundUser.role || 'user', 
+                    uid: foundUser.uid || '', 
                     ig: foundUser.ig || '',
                     avatar: foundUser.avatar || '🎯',
                     gender: foundUser.gender || 'ชาย'
@@ -1257,44 +1114,27 @@
                 if (newPass) regUser.pass = newPass;
             }
 
-            // Sync กับรายชื่อแคลน — ถ้ายังไม่มีใน members ให้ไม่บังคับเพิ่ม
-            // แต่ถ้ามีอยู่แล้ว ต้องอัปเดตรูป/ชื่อให้ตรงกับโปรไฟล์
-            let memberObj = members.find(m =>
-                (currentUser.userId && m.userId === currentUser.userId) ||
-                (m.name && m.name.toLowerCase() === oldUsername.toLowerCase()) ||
-                (newName && m.name && m.name.toLowerCase() === newName.toLowerCase())
-            );
+            // Sync with clan members list if exists
+            const memberObj = members.find(m => m.userId === currentUser.userId || m.name.toLowerCase() === oldUsername.toLowerCase());
             if (memberObj) {
                 memberObj.name = newName;
                 memberObj.avatar = avatarVal;
                 memberObj.gender = genderVal;
-                if (currentUser.userId) memberObj.userId = currentUser.userId;
                 if (uidVal) memberObj.uid = uidVal;
                 if (igVal) memberObj.ig = igVal;
             }
 
-            // เก็บ flag กัน Firebase ทับรูปที่เพิ่งเซฟ
-            window._NVL_PENDING_AVATAR = {
-                userId: currentUser.userId,
-                name: newName,
-                avatar: avatarVal,
-                ts: Date.now()
-            };
-
-            saveState({ syncMembers: true, syncUsers: true });
+            saveState();
             updateAuthUI();
             renderRoster();
             renderChatView();
             renderAdminUserTable();
             closeProfileModal();
-            showToast('อัปเดตโปรไฟล์แล้ว — รูปจะแสดงในรายชื่อแคลนทันที', 'success');
+            showToast('อัปเดตข้อมูลโปรไฟล์ส่วนตัวเรียบร้อยแล้ว!', 'success');
         }
 
         // Direct Logout Function
-        async function logoutUser() {
-            if (window.NVL_FIREBASE_AUTH) {
-                try { await window.NVL_FIREBASE_AUTH.signOutAdmin(); } catch (e) { console.warn(e); }
-            }
+        function logoutUser() {
             currentUser = null;
             saveState();
             updateAuthUI();
@@ -1646,7 +1486,7 @@
             };
 
             chatMessages.push(newMsg);
-            saveState({ addChat: newMsg });
+            saveState();
             input.value = '';
             renderChatView();
         }
@@ -1662,7 +1502,7 @@
         function clearChatMessages() {
             if (!canManageTryouts()) return;
             chatMessages = [];
-            saveState({ clearChats: true });
+            saveState();
             renderChatView();
             showToast('ลบประวัติแชททั้งหมดเรียบร้อยแล้ว', 'info');
         }
@@ -1779,7 +1619,7 @@
             if (user) {
                 registeredUsers = registeredUsers.filter(u => u.userId !== userId);
                 members = members.filter(m => m.userId !== userId);
-                saveState({ syncMembers: true, syncUsers: true });
+                saveState();
                 renderRoster();
                 renderAdminUserTable();
                 showToast(`ลบบัญชี ${user.username} (${userId}) เรียบร้อยแล้ว`, 'info');
@@ -1807,13 +1647,12 @@
             };
 
             tryouts.push(newTryout);
-            saveState({ addTryout: newTryout });
+            saveState();
             renderTryouts();
             updateAuthUI();
-            updateStats();
 
             document.getElementById('tryout-form').reset();
-            showToast('ยื่นใบสมัครสำเร็จ! ซิงค์ขึ้นคลาวด์แล้ว — แอดมินจะเห็นทันที', 'success');
+            showToast('ยื่นใบสมัครสำเร็จ! กรุณารอทีมงานเทสแคลนติดต่อกลับทาง IG เมื่ออนุมัติแล้วจะใช้งานห้องแชทได้', 'success');
             switchTab('roster');
         }
 
@@ -1849,7 +1688,7 @@
                 }
 
                 tryouts.splice(index, 1);
-                saveState({ removeTryoutId: item.id, syncMembers: true, syncUsers: true });
+                saveState();
                 renderRoster();
                 renderTryouts();
                 renderAdminUserTable();
@@ -1860,10 +1699,9 @@
 
         function rejectTryout(id) {
             tryouts = tryouts.filter(t => t.id !== id);
-            saveState({ removeTryoutId: id });
+            saveState();
             renderTryouts();
             updateAuthUI();
-            updateStats();
             showToast('ปฏิเสธใบสมัครเรียบร้อยแล้ว', 'info');
         }
 
@@ -1906,7 +1744,7 @@
                 });
             }
 
-            saveState({ syncMembers: true, syncUsers: true });
+            saveState();
             renderRoster();
             renderAdminUserTable();
             document.getElementById('admin-add-member-form').reset();
@@ -1922,7 +1760,7 @@
                 else if (newRole === 'ที่ปรึกษา') member.avatar = '🧠';
                 else member.avatar = '🎯';
                 
-                saveState({ syncMembers: true });
+                saveState();
                 renderRoster();
                 showToast(`อัปเดตยศของ ${member.name} เป็น ${newRole} แล้ว`, 'info');
             }
@@ -1932,7 +1770,7 @@
             const member = members.find(m => m.id === id);
             if (member) {
                 members = members.filter(m => m.id !== id);
-                saveState({ syncMembers: true });
+                saveState();
                 renderRoster();
                 renderAdminUserTable();
                 showToast('ลบสมาชิกออกจากรายชื่อเรียบร้อยแล้ว', 'info');
@@ -1945,7 +1783,7 @@
             registeredUsers = DEFAULT_USERS;
             chatMessages = DEFAULT_CHAT_MESSAGES;
             currentUser = null;
-            saveState({ syncAll: true });
+            saveState();
             renderRoster();
             renderTryouts();
             renderChatView();
@@ -2003,16 +1841,12 @@
         }
     </script>
 
-    <!-- FIREBASE AUTH + LIVE SYNC (ไม่ทับทั้งก้อน — ใบสมัคร/แชทเขียนทีละรายการ) -->
+    <!-- FIREBASE LIVE SYNC
+         รวมความสามารถ Firebase Realtime Database จาก index1.html
+         โดยให้ index.html เป็น UI/ระบบหลัก และใช้ Firebase เป็นชั้น Live Sync -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import {
-            getAuth,
-            signInWithEmailAndPassword,
-            signOut,
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAD_Qog_Ri1kaSScwms9rNFhQ_rNb-z8jc",
@@ -2026,12 +1860,10 @@
 
         const firebaseApp = initializeApp(firebaseConfig);
         const db = getDatabase(firebaseApp);
-        const auth = getAuth(firebaseApp);
 
         let applyingRemote = false;
-        let seedDone = false;
-        let firebaseUser = null;
-        let remoteReady = { members: false, chats: false, tryouts: false, users: false };
+        let firstMembersSnapshot = true;
+        let firstChatSnapshot = true;
 
         const statusEl = document.getElementById("firebase-sync-status");
         const setStatus = (text, online = true) => {
@@ -2040,280 +1872,91 @@
             statusEl.className = "text-[10px] mt-1 " + (online ? "text-cyan-500" : "text-red-400");
         };
 
-        function toArray(val) {
-            if (val == null) return null;
-            if (Array.isArray(val)) return val.filter(Boolean);
-            if (typeof val === "object") return Object.values(val).filter(Boolean);
-            return null;
-        }
-
-        function listToMap(list, key = "id") {
-            const map = {};
-            (list || []).forEach((item) => {
-                if (!item) return;
-                const k = item[key] != null ? String(item[key]) : null;
-                if (k) map[k] = item;
-            });
-            return map;
-        }
-
-        window.NVL_FIREBASE_AUTH = {
-            signInAdmin(email, password) {
-                return signInWithEmailAndPassword(auth, email, password);
-            },
-            signOutAdmin() {
-                return signOut(auth);
-            },
-            getCurrentUser() {
-                return auth.currentUser || firebaseUser;
-            },
-            isAdminAuthenticated() {
-                return !!(auth.currentUser || firebaseUser);
-            }
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            firebaseUser = user;
-            if (user) {
-                setStatus("● Firebase Auth: แอดมินล็อกอินแล้ว + Live Sync", true);
-                try {
-                    const raw = localStorage.getItem("neverlose_current_user");
-                    const cu = raw ? JSON.parse(raw) : null;
-                    if (!cu || cu.role !== "admin") {
-                        if (typeof window.NVL_APPLY_ADMIN_SESSION === "function") {
-                            window.NVL_APPLY_ADMIN_SESSION({
-                                firebaseUid: user.uid,
-                                firebaseEmail: user.email
-                            });
-                        }
-                    }
-                } catch (_) {}
-            } else {
-                setStatus("● Firebase Live Sync: พร้อม", true);
-            }
-        });
-
-        function applyIncoming(partial) {
-            applyingRemote = true;
-            try {
-                if (typeof window.NVL_APPLY_FIREBASE_STATE === "function") {
-                    window.NVL_APPLY_FIREBASE_STATE(partial);
-                }
-            } finally {
-                applyingRemote = false;
-            }
-        }
-
         window.NVL_FIREBASE_SYNC = {
-            // เพิ่ม/อัปเดตใบสมัครทีละใบ — ไม่ทับใบอื่น
-            async upsertTryout(item) {
-                if (applyingRemote || !item || item.id == null) return;
-                try {
-                    await set(ref(db, "clan_tryouts/" + item.id), item);
-                    setStatus("● ซิงค์ใบสมัครเทสแล้ว", true);
-                } catch (e) {
-                    console.error(e);
-                    setStatus("● ซิงค์ใบสมัครไม่สำเร็จ", false);
-                }
-            },
-            async removeTryout(id) {
-                if (applyingRemote || id == null) return;
-                try {
-                    await remove(ref(db, "clan_tryouts/" + id));
-                    setStatus("● อัปเดตใบสมัครเทสแล้ว", true);
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-            async upsertChat(msg) {
-                if (applyingRemote || !msg || msg.id == null) return;
-                try {
-                    await set(ref(db, "clan_chats/" + msg.id), msg);
-                    setStatus("● ซิงค์แชทแล้ว", true);
-                } catch (e) {
-                    console.error(e);
-                    setStatus("● ซิงค์แชทไม่สำเร็จ", false);
-                }
-            },
-            async clearChats() {
-                if (applyingRemote) return;
-                try {
-                    await set(ref(db, "clan_chats"), null);
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-            // members: merge กับของบน Firebase ก่อนเขียน (กันเครื่องเก่าทับ)
-            async syncMembers(list) {
-                if (applyingRemote) return;
-                try {
-                    const snap = await get(ref(db, "clan_members"));
-                    const remote = toArray(snap.val()) || [];
-                    const map = {};
-                    remote.forEach((m) => {
-                        const k = m.userId || String(m.id);
-                        if (k) map[k] = m;
-                    });
-                    (list || []).forEach((m) => {
-                        const k = m.userId || String(m.id);
-                        if (k) map[k] = m;
-                    });
-                    await set(ref(db, "clan_members"), Object.values(map));
-                    setStatus("● ซิงค์สมาชิกแล้ว", true);
-                } catch (e) {
-                    console.error(e);
-                    setStatus("● ซิงค์สมาชิกไม่สำเร็จ", false);
-                }
-            },
-            async syncUsers(list) {
-                if (applyingRemote) return;
-                const isAuthed = !!(auth.currentUser || firebaseUser);
-                if (!isAuthed) return;
-                try {
-                    await set(ref(db, "clan_users"), list || []);
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-            async syncTryoutsList(list) {
-                if (applyingRemote) return;
-                try {
-                    // merge: ไม่ลบใบบนคลาวด์ที่เครื่องนี้ยังไม่มี
-                    const snap = await get(ref(db, "clan_tryouts"));
-                    const remoteArr = toArray(snap.val()) || [];
-                    const map = listToMap(remoteArr, "id");
-                    (list || []).forEach((t) => {
-                        if (t && t.id != null) map[String(t.id)] = t;
-                    });
-                    await set(ref(db, "clan_tryouts"), map);
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-            async syncChatsList(list) {
-                if (applyingRemote) return;
-                try {
-                    const snap = await get(ref(db, "clan_chats"));
-                    const remoteArr = toArray(snap.val()) || [];
-                    const map = listToMap(remoteArr, "id");
-                    (list || []).forEach((c) => {
-                        if (c && c.id != null) map[String(c.id)] = c;
-                    });
-                    await set(ref(db, "clan_chats"), map);
-                } catch (e) {
-                    console.error(e);
-                }
-            },
-            // ใช้เฉพาะตอนรีเซ็ตทั้งระบบ
             async pushState(state) {
                 if (applyingRemote) return;
                 try {
                     await Promise.all([
                         set(ref(db, "clan_members"), state.members || []),
-                        set(ref(db, "clan_tryouts"), listToMap(state.tryouts || [], "id")),
-                        set(ref(db, "clan_chats"), listToMap(state.chatMessages || [], "id"))
+                        set(ref(db, "clan_chats"), state.chatMessages || [])
                     ]);
-                    if (auth.currentUser || firebaseUser) {
-                        await set(ref(db, "clan_users"), state.registeredUsers || []);
-                    }
-                    setStatus("● Firebase: ซิงค์ทั้งหมดแล้ว", true);
-                } catch (e) {
-                    console.error(e);
-                    setStatus("● Firebase: เขียนไม่ได้", false);
+                    setStatus("● Firebase Live Sync: เชื่อมต่อแล้ว", true);
+                } catch (error) {
+                    console.error("Firebase sync error:", error);
+                    setStatus("● Firebase: เชื่อมต่อไม่ได้ — ใช้ LocalStorage ต่อได้", false);
                 }
             }
         };
 
-        async function trySeedIfEmpty() {
-            if (seedDone) return;
-            // รอให้รู้สถานะครบก่อน seed
-            if (!remoteReady.members && !remoteReady.tryouts) return;
-            seedDone = true;
-            try {
-                const snaps = await Promise.all([
-                    get(ref(db, "clan_members")),
-                    get(ref(db, "clan_chats")),
-                    get(ref(db, "clan_tryouts")),
-                    get(ref(db, "clan_users"))
-                ]);
-                const remoteEmpty = snaps.every((s) => s.val() === null);
-                if (!remoteEmpty) return;
-
-                const local = {
-                    members: JSON.parse(localStorage.getItem("neverlose_members") || "[]"),
-                    chatMessages: JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]"),
-                    tryouts: JSON.parse(localStorage.getItem("neverlose_tryouts") || "[]"),
-                    registeredUsers: JSON.parse(localStorage.getItem("neverlose_users") || "[]")
-                };
-                const hasLocal =
-                    (local.members && local.members.length) ||
-                    (local.chatMessages && local.chatMessages.length) ||
-                    (local.tryouts && local.tryouts.length);
-                if (hasLocal) {
-                    await window.NVL_FIREBASE_SYNC.pushState(local);
-                    setStatus("● Firebase: seed ข้อมูลเริ่มต้นแล้ว", true);
-                }
-            } catch (e) {
-                console.error("seed", e);
-            }
-        }
-
         onValue(ref(db, "clan_members"), (snapshot) => {
-            remoteReady.members = true;
-            const incoming = toArray(snapshot.val());
-            if (incoming === null) {
-                trySeedIfEmpty();
+            const remote = snapshot.val();
+
+            // ถ้ายังไม่มีข้อมูลบน Firebase ให้ใช้ข้อมูลจาก index.html เป็นชุดเริ่มต้น
+            if (remote === null) {
+                if (firstMembersSnapshot) {
+                    firstMembersSnapshot = false;
+                    const local = JSON.parse(localStorage.getItem("neverlose_members") || "null");
+                    if (local) window.NVL_FIREBASE_SYNC.pushState({
+                        members: local,
+                        chatMessages: JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]")
+                    });
+                }
                 return;
             }
-            applyIncoming({ members: incoming });
-            setStatus("● Live Sync: สมาชิกออนไลน์ (" + incoming.length + ")", true);
-        }, (err) => {
-            console.error(err);
-            setStatus("● อ่านสมาชิกไม่ได้", false);
+
+            firstMembersSnapshot = false;
+            const incoming = Array.isArray(remote) ? remote : Object.values(remote);
+
+            applyingRemote = true;
+            localStorage.setItem("neverlose_members", JSON.stringify(incoming));
+
+            // ส่งข้อมูลกลับไปให้ index.html ซึ่งเป็นตัวหลัก
+            if (typeof window.NVL_APPLY_FIREBASE_STATE === "function") {
+                window.NVL_APPLY_FIREBASE_STATE({ members: incoming });
+            }
+
+            applyingRemote = false;
+            setStatus("● Firebase Live Sync: สมาชิกออนไลน์", true);
+        }, (error) => {
+            console.error("Firebase members listener:", error);
+            setStatus("● Firebase: อ่านสมาชิกไม่ได้", false);
         });
 
         onValue(ref(db, "clan_chats"), (snapshot) => {
-            remoteReady.chats = true;
-            const incoming = toArray(snapshot.val());
-            if (incoming === null) {
-                trySeedIfEmpty();
+            const remote = snapshot.val();
+
+            if (remote === null) {
+                if (firstChatSnapshot) {
+                    firstChatSnapshot = false;
+                    const local = JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]");
+                    if (local.length) {
+                        window.NVL_FIREBASE_SYNC.pushState({
+                            members: JSON.parse(localStorage.getItem("neverlose_members") || "[]"),
+                            chatMessages: local
+                        });
+                    }
+                }
                 return;
             }
-            // เรียงตาม id / เวลา
-            incoming.sort((a, b) => (a.id || 0) - (b.id || 0));
-            applyIncoming({ chatMessages: incoming });
-        }, (err) => {
-            console.error(err);
-            setStatus("● อ่านแชทไม่ได้", false);
+
+            firstChatSnapshot = false;
+            const incoming = Array.isArray(remote) ? remote : Object.values(remote);
+
+            applyingRemote = true;
+            localStorage.setItem("neverlose_chat_messages", JSON.stringify(incoming));
+
+            if (typeof window.NVL_APPLY_FIREBASE_STATE === "function") {
+                window.NVL_APPLY_FIREBASE_STATE({ chatMessages: incoming });
+            }
+
+            applyingRemote = false;
+            setStatus("● Firebase Live Sync: แชทออนไลน์", true);
+        }, (error) => {
+            console.error("Firebase chat listener:", error);
+            setStatus("● Firebase: อ่านแชทไม่ได้", false);
         });
 
-        onValue(ref(db, "clan_tryouts"), (snapshot) => {
-            remoteReady.tryouts = true;
-            const incoming = toArray(snapshot.val());
-            if (incoming === null) {
-                trySeedIfEmpty();
-                return;
-            }
-            incoming.sort((a, b) => (b.id || 0) - (a.id || 0));
-            applyIncoming({ tryouts: incoming });
-            setStatus("● Live Sync: ใบสมัครเทส " + incoming.length + " รายการ", true);
-        }, (err) => {
-            console.error(err);
-            setStatus("● อ่านใบสมัครไม่ได้", false);
-        });
-
-        onValue(ref(db, "clan_users"), (snapshot) => {
-            remoteReady.users = true;
-            const incoming = toArray(snapshot.val());
-            if (incoming === null) {
-                trySeedIfEmpty();
-                return;
-            }
-            applyIncoming({ registeredUsers: incoming });
-        }, (err) => {
-            console.error(err);
-        });
+        // Firebase listeners จะจัดการ initial sync ให้เอง
     </script>
-
 </body>
 </html>
