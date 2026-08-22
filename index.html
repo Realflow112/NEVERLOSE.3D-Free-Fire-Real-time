@@ -781,7 +781,9 @@
         let currentRoleFilter = 'ALL';
 
         // Save State to LocalStorage
-        function saveState() {
+        function saveState(opts) {
+            // opts: { syncMembers, syncTryouts, syncChats, syncUsers, removeTryoutId, addTryout, addChat }
+            opts = opts || {};
             localStorage.setItem('neverlose_members', JSON.stringify(members));
             localStorage.setItem('neverlose_tryouts', JSON.stringify(tryouts));
             localStorage.setItem('neverlose_users', JSON.stringify(registeredUsers));
@@ -789,14 +791,21 @@
             localStorage.setItem('neverlose_current_user', JSON.stringify(currentUser));
             updateStats();
 
-            // Firebase Live Sync — ซิงค์ข้อมูลแชร์ทั้งหมด (ยกเว้น currentUser)
-            if (window.NVL_FIREBASE_SYNC) {
-                window.NVL_FIREBASE_SYNC.pushState({
-                    members,
-                    chatMessages,
-                    tryouts,
-                    registeredUsers
-                });
+            // ซิงค์แบบเจาะจง — ไม่ทับทั้งก้อนด้วยข้อมูลเครื่องที่ล้าสมัย
+            if (!window.NVL_FIREBASE_SYNC) return;
+            const S = window.NVL_FIREBASE_SYNC;
+            if (opts.addTryout) S.upsertTryout(opts.addTryout);
+            if (opts.removeTryoutId != null) S.removeTryout(opts.removeTryoutId);
+            if (opts.addChat) S.upsertChat(opts.addChat);
+            if (opts.syncMembers) S.syncMembers(members);
+            if (opts.syncUsers) S.syncUsers(registeredUsers);
+            if (opts.clearChats) S.clearChats();
+            // ถ้าไม่ระบุ opts เลย = เซฟ local อย่างเดียว (เช่น ล็อกอิน) ไม่ไปทับ Firebase
+            if (opts.syncAll) {
+                S.syncMembers(members);
+                S.syncTryoutsList(tryouts);
+                S.syncChatsList(chatMessages);
+                S.syncUsers(registeredUsers);
             }
         }
 
@@ -1272,7 +1281,7 @@
                 ts: Date.now()
             };
 
-            saveState();
+            saveState({ syncMembers: true, syncUsers: true });
             updateAuthUI();
             renderRoster();
             renderChatView();
@@ -1637,7 +1646,7 @@
             };
 
             chatMessages.push(newMsg);
-            saveState();
+            saveState({ addChat: newMsg });
             input.value = '';
             renderChatView();
         }
@@ -1653,7 +1662,7 @@
         function clearChatMessages() {
             if (!canManageTryouts()) return;
             chatMessages = [];
-            saveState();
+            saveState({ clearChats: true });
             renderChatView();
             showToast('ลบประวัติแชททั้งหมดเรียบร้อยแล้ว', 'info');
         }
@@ -1770,7 +1779,7 @@
             if (user) {
                 registeredUsers = registeredUsers.filter(u => u.userId !== userId);
                 members = members.filter(m => m.userId !== userId);
-                saveState();
+                saveState({ syncMembers: true, syncUsers: true });
                 renderRoster();
                 renderAdminUserTable();
                 showToast(`ลบบัญชี ${user.username} (${userId}) เรียบร้อยแล้ว`, 'info');
@@ -1798,12 +1807,13 @@
             };
 
             tryouts.push(newTryout);
-            saveState();
+            saveState({ addTryout: newTryout });
             renderTryouts();
             updateAuthUI();
+            updateStats();
 
             document.getElementById('tryout-form').reset();
-            showToast('ยื่นใบสมัครสำเร็จ! กรุณารอทีมงานเทสแคลนติดต่อกลับทาง IG เมื่ออนุมัติแล้วจะใช้งานห้องแชทได้', 'success');
+            showToast('ยื่นใบสมัครสำเร็จ! ซิงค์ขึ้นคลาวด์แล้ว — แอดมินจะเห็นทันที', 'success');
             switchTab('roster');
         }
 
@@ -1839,7 +1849,7 @@
                 }
 
                 tryouts.splice(index, 1);
-                saveState();
+                saveState({ removeTryoutId: item.id, syncMembers: true, syncUsers: true });
                 renderRoster();
                 renderTryouts();
                 renderAdminUserTable();
@@ -1850,9 +1860,10 @@
 
         function rejectTryout(id) {
             tryouts = tryouts.filter(t => t.id !== id);
-            saveState();
+            saveState({ removeTryoutId: id });
             renderTryouts();
             updateAuthUI();
+            updateStats();
             showToast('ปฏิเสธใบสมัครเรียบร้อยแล้ว', 'info');
         }
 
@@ -1895,7 +1906,7 @@
                 });
             }
 
-            saveState();
+            saveState({ syncMembers: true, syncUsers: true });
             renderRoster();
             renderAdminUserTable();
             document.getElementById('admin-add-member-form').reset();
@@ -1911,7 +1922,7 @@
                 else if (newRole === 'ที่ปรึกษา') member.avatar = '🧠';
                 else member.avatar = '🎯';
                 
-                saveState();
+                saveState({ syncMembers: true });
                 renderRoster();
                 showToast(`อัปเดตยศของ ${member.name} เป็น ${newRole} แล้ว`, 'info');
             }
@@ -1921,7 +1932,7 @@
             const member = members.find(m => m.id === id);
             if (member) {
                 members = members.filter(m => m.id !== id);
-                saveState();
+                saveState({ syncMembers: true });
                 renderRoster();
                 renderAdminUserTable();
                 showToast('ลบสมาชิกออกจากรายชื่อเรียบร้อยแล้ว', 'info');
@@ -1934,7 +1945,7 @@
             registeredUsers = DEFAULT_USERS;
             chatMessages = DEFAULT_CHAT_MESSAGES;
             currentUser = null;
-            saveState();
+            saveState({ syncAll: true });
             renderRoster();
             renderTryouts();
             renderChatView();
@@ -1992,10 +2003,10 @@
         }
     </script>
 
-    <!-- FIREBASE AUTH + LIVE SYNC -->
+    <!-- FIREBASE AUTH + LIVE SYNC (ไม่ทับทั้งก้อน — ใบสมัคร/แชทเขียนทีละรายการ) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import {
             getAuth,
             signInWithEmailAndPassword,
@@ -2020,6 +2031,7 @@
         let applyingRemote = false;
         let seedDone = false;
         let firebaseUser = null;
+        let remoteReady = { members: false, chats: false, tryouts: false, users: false };
 
         const statusEl = document.getElementById("firebase-sync-status");
         const setStatus = (text, online = true) => {
@@ -2030,21 +2042,21 @@
 
         function toArray(val) {
             if (val == null) return null;
-            if (Array.isArray(val)) return val;
-            if (typeof val === "object") return Object.values(val);
+            if (Array.isArray(val)) return val.filter(Boolean);
+            if (typeof val === "object") return Object.values(val).filter(Boolean);
             return null;
         }
 
-        function readLocalState() {
-            return {
-                members: JSON.parse(localStorage.getItem("neverlose_members") || "null"),
-                chatMessages: JSON.parse(localStorage.getItem("neverlose_chat_messages") || "null"),
-                tryouts: JSON.parse(localStorage.getItem("neverlose_tryouts") || "null"),
-                registeredUsers: JSON.parse(localStorage.getItem("neverlose_users") || "null")
-            };
+        function listToMap(list, key = "id") {
+            const map = {};
+            (list || []).forEach((item) => {
+                if (!item) return;
+                const k = item[key] != null ? String(item[key]) : null;
+                if (k) map[k] = item;
+            });
+            return map;
         }
 
-        // —— Firebase Authentication (แอดมิน) ——
         window.NVL_FIREBASE_AUTH = {
             signInAdmin(email, password) {
                 return signInWithEmailAndPassword(auth, email, password);
@@ -2064,7 +2076,6 @@
             firebaseUser = user;
             if (user) {
                 setStatus("● Firebase Auth: แอดมินล็อกอินแล้ว + Live Sync", true);
-                // กู้ session แอดมินถ้ายังไม่มี currentUser
                 try {
                     const raw = localStorage.getItem("neverlose_current_user");
                     const cu = raw ? JSON.parse(raw) : null;
@@ -2078,46 +2089,9 @@
                     }
                 } catch (_) {}
             } else {
-                setStatus("● Firebase Live Sync: พร้อม (แอดมินยังไม่ล็อกอิน)", true);
+                setStatus("● Firebase Live Sync: พร้อม", true);
             }
         });
-
-        window.NVL_FIREBASE_SYNC = {
-            async pushState(state) {
-                if (applyingRemote) return;
-                try {
-                    const payload = {
-                        members: state.members || [],
-                        chatMessages: state.chatMessages || [],
-                        tryouts: state.tryouts || [],
-                        registeredUsers: state.registeredUsers || []
-                    };
-
-                    // แชท + ใบสมัคร + สมาชิก (รวมรูปโปรไฟล์): ซิงค์ได้ทุกคน
-                    // ยูสเซอร์ (มีรหัสผ่าน): เฉพาะแอดมินที่ Auth แล้ว
-                    const isAuthed = !!(auth.currentUser || firebaseUser);
-                    const tasks = [
-                        set(ref(db, "clan_chats"), payload.chatMessages),
-                        set(ref(db, "clan_tryouts"), payload.tryouts),
-                        set(ref(db, "clan_members"), payload.members)
-                    ];
-                    if (isAuthed) {
-                        tasks.push(set(ref(db, "clan_users"), payload.registeredUsers));
-                    }
-
-                    await Promise.all(tasks);
-                    setStatus(
-                        isAuthed
-                            ? "● Firebase Auth แอดมิน + Live Sync ครบ"
-                            : "● Firebase Live Sync: สมาชิก+แชท+เทส",
-                        true
-                    );
-                } catch (error) {
-                    console.error("Firebase sync error:", error);
-                    setStatus("● Firebase: เขียนไม่ได้ — ใช้ LocalStorage ต่อได้", false);
-                }
-            }
-        };
 
         function applyIncoming(partial) {
             applyingRemote = true;
@@ -2130,8 +2104,130 @@
             }
         }
 
+        window.NVL_FIREBASE_SYNC = {
+            // เพิ่ม/อัปเดตใบสมัครทีละใบ — ไม่ทับใบอื่น
+            async upsertTryout(item) {
+                if (applyingRemote || !item || item.id == null) return;
+                try {
+                    await set(ref(db, "clan_tryouts/" + item.id), item);
+                    setStatus("● ซิงค์ใบสมัครเทสแล้ว", true);
+                } catch (e) {
+                    console.error(e);
+                    setStatus("● ซิงค์ใบสมัครไม่สำเร็จ", false);
+                }
+            },
+            async removeTryout(id) {
+                if (applyingRemote || id == null) return;
+                try {
+                    await remove(ref(db, "clan_tryouts/" + id));
+                    setStatus("● อัปเดตใบสมัครเทสแล้ว", true);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            async upsertChat(msg) {
+                if (applyingRemote || !msg || msg.id == null) return;
+                try {
+                    await set(ref(db, "clan_chats/" + msg.id), msg);
+                    setStatus("● ซิงค์แชทแล้ว", true);
+                } catch (e) {
+                    console.error(e);
+                    setStatus("● ซิงค์แชทไม่สำเร็จ", false);
+                }
+            },
+            async clearChats() {
+                if (applyingRemote) return;
+                try {
+                    await set(ref(db, "clan_chats"), null);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            // members: merge กับของบน Firebase ก่อนเขียน (กันเครื่องเก่าทับ)
+            async syncMembers(list) {
+                if (applyingRemote) return;
+                try {
+                    const snap = await get(ref(db, "clan_members"));
+                    const remote = toArray(snap.val()) || [];
+                    const map = {};
+                    remote.forEach((m) => {
+                        const k = m.userId || String(m.id);
+                        if (k) map[k] = m;
+                    });
+                    (list || []).forEach((m) => {
+                        const k = m.userId || String(m.id);
+                        if (k) map[k] = m;
+                    });
+                    await set(ref(db, "clan_members"), Object.values(map));
+                    setStatus("● ซิงค์สมาชิกแล้ว", true);
+                } catch (e) {
+                    console.error(e);
+                    setStatus("● ซิงค์สมาชิกไม่สำเร็จ", false);
+                }
+            },
+            async syncUsers(list) {
+                if (applyingRemote) return;
+                const isAuthed = !!(auth.currentUser || firebaseUser);
+                if (!isAuthed) return;
+                try {
+                    await set(ref(db, "clan_users"), list || []);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            async syncTryoutsList(list) {
+                if (applyingRemote) return;
+                try {
+                    // merge: ไม่ลบใบบนคลาวด์ที่เครื่องนี้ยังไม่มี
+                    const snap = await get(ref(db, "clan_tryouts"));
+                    const remoteArr = toArray(snap.val()) || [];
+                    const map = listToMap(remoteArr, "id");
+                    (list || []).forEach((t) => {
+                        if (t && t.id != null) map[String(t.id)] = t;
+                    });
+                    await set(ref(db, "clan_tryouts"), map);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            async syncChatsList(list) {
+                if (applyingRemote) return;
+                try {
+                    const snap = await get(ref(db, "clan_chats"));
+                    const remoteArr = toArray(snap.val()) || [];
+                    const map = listToMap(remoteArr, "id");
+                    (list || []).forEach((c) => {
+                        if (c && c.id != null) map[String(c.id)] = c;
+                    });
+                    await set(ref(db, "clan_chats"), map);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            // ใช้เฉพาะตอนรีเซ็ตทั้งระบบ
+            async pushState(state) {
+                if (applyingRemote) return;
+                try {
+                    await Promise.all([
+                        set(ref(db, "clan_members"), state.members || []),
+                        set(ref(db, "clan_tryouts"), listToMap(state.tryouts || [], "id")),
+                        set(ref(db, "clan_chats"), listToMap(state.chatMessages || [], "id"))
+                    ]);
+                    if (auth.currentUser || firebaseUser) {
+                        await set(ref(db, "clan_users"), state.registeredUsers || []);
+                    }
+                    setStatus("● Firebase: ซิงค์ทั้งหมดแล้ว", true);
+                } catch (e) {
+                    console.error(e);
+                    setStatus("● Firebase: เขียนไม่ได้", false);
+                }
+            }
+        };
+
         async function trySeedIfEmpty() {
             if (seedDone) return;
+            // รอให้รู้สถานะครบก่อน seed
+            if (!remoteReady.members && !remoteReady.tryouts) return;
             seedDone = true;
             try {
                 const snaps = await Promise.all([
@@ -2140,65 +2236,82 @@
                     get(ref(db, "clan_tryouts")),
                     get(ref(db, "clan_users"))
                 ]);
-                const remoteEmpty = snaps.every(s => s.val() === null);
+                const remoteEmpty = snaps.every((s) => s.val() === null);
                 if (!remoteEmpty) return;
 
-                const local = readLocalState();
+                const local = {
+                    members: JSON.parse(localStorage.getItem("neverlose_members") || "[]"),
+                    chatMessages: JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]"),
+                    tryouts: JSON.parse(localStorage.getItem("neverlose_tryouts") || "[]"),
+                    registeredUsers: JSON.parse(localStorage.getItem("neverlose_users") || "[]")
+                };
                 const hasLocal =
-                    (Array.isArray(local.members) && local.members.length) ||
-                    (Array.isArray(local.chatMessages) && local.chatMessages.length) ||
-                    (Array.isArray(local.tryouts) && local.tryouts.length) ||
-                    (Array.isArray(local.registeredUsers) && local.registeredUsers.length);
-
-                // seed แชท/เทสได้เสมอ; members/users ต้อง auth
-                if (hasLocal && window.NVL_FIREBASE_SYNC) {
-                    await window.NVL_FIREBASE_SYNC.pushState({
-                        members: local.members || [],
-                        chatMessages: local.chatMessages || [],
-                        tryouts: local.tryouts || [],
-                        registeredUsers: local.registeredUsers || []
-                    });
+                    (local.members && local.members.length) ||
+                    (local.chatMessages && local.chatMessages.length) ||
+                    (local.tryouts && local.tryouts.length);
+                if (hasLocal) {
+                    await window.NVL_FIREBASE_SYNC.pushState(local);
                     setStatus("● Firebase: seed ข้อมูลเริ่มต้นแล้ว", true);
                 }
             } catch (e) {
-                console.error("Firebase seed error:", e);
+                console.error("seed", e);
             }
         }
 
         onValue(ref(db, "clan_members"), (snapshot) => {
+            remoteReady.members = true;
             const incoming = toArray(snapshot.val());
-            if (incoming === null) { trySeedIfEmpty(); return; }
+            if (incoming === null) {
+                trySeedIfEmpty();
+                return;
+            }
             applyIncoming({ members: incoming });
-        }, (error) => {
-            console.error("Firebase members listener:", error);
-            setStatus("● Firebase: อ่านสมาชิกไม่ได้", false);
+            setStatus("● Live Sync: สมาชิกออนไลน์ (" + incoming.length + ")", true);
+        }, (err) => {
+            console.error(err);
+            setStatus("● อ่านสมาชิกไม่ได้", false);
         });
 
         onValue(ref(db, "clan_chats"), (snapshot) => {
+            remoteReady.chats = true;
             const incoming = toArray(snapshot.val());
-            if (incoming === null) { trySeedIfEmpty(); return; }
+            if (incoming === null) {
+                trySeedIfEmpty();
+                return;
+            }
+            // เรียงตาม id / เวลา
+            incoming.sort((a, b) => (a.id || 0) - (b.id || 0));
             applyIncoming({ chatMessages: incoming });
-        }, (error) => {
-            console.error("Firebase chat listener:", error);
-            setStatus("● Firebase: อ่านแชทไม่ได้", false);
+        }, (err) => {
+            console.error(err);
+            setStatus("● อ่านแชทไม่ได้", false);
         });
 
         onValue(ref(db, "clan_tryouts"), (snapshot) => {
+            remoteReady.tryouts = true;
             const incoming = toArray(snapshot.val());
-            if (incoming === null) { trySeedIfEmpty(); return; }
+            if (incoming === null) {
+                trySeedIfEmpty();
+                return;
+            }
+            incoming.sort((a, b) => (b.id || 0) - (a.id || 0));
             applyIncoming({ tryouts: incoming });
-        }, (error) => {
-            console.error("Firebase tryouts listener:", error);
-            setStatus("● Firebase: อ่านใบสมัครไม่ได้", false);
+            setStatus("● Live Sync: ใบสมัครเทส " + incoming.length + " รายการ", true);
+        }, (err) => {
+            console.error(err);
+            setStatus("● อ่านใบสมัครไม่ได้", false);
         });
 
         onValue(ref(db, "clan_users"), (snapshot) => {
+            remoteReady.users = true;
             const incoming = toArray(snapshot.val());
-            if (incoming === null) { trySeedIfEmpty(); return; }
+            if (incoming === null) {
+                trySeedIfEmpty();
+                return;
+            }
             applyIncoming({ registeredUsers: incoming });
-        }, (error) => {
-            console.error("Firebase users listener:", error);
-            setStatus("● Firebase: อ่านยูสเซอร์ไม่ได้", false);
+        }, (err) => {
+            console.error(err);
         });
     </script>
 
