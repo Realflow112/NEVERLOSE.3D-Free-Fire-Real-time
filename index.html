@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEVERLOSE.3D - ระบบแคลน Free Fire & ระบบแชทแคลน</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#080a0f',
+                            card: '#101622',
+                            cardLight: '#182030',
+                            border: '#1e2d42',
+                            cyan: '#00f0ff',
+                            blue: '#0072ff',
+                            deepBlue: '#0f2b48',
+                            copper: '#d48858',
+                            accent: '#38bdf8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #06080c;
+            color: #f1f5f9;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 85% 30%, rgba(0, 114, 255, 0.08) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+        }
+        .glow-blue {
+            box-shadow: 0 0 25px rgba(0, 114, 255, 0.3);
+        }
+        .glow-card:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+            border-color: rgba(0, 240, 255, 0.5);
+        }
+        .text-glow-cyan {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0d14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- Top Navbar -->
+    <nav class="sticky top-0 z-40 bg-cyber-dark/90 backdrop-blur-md border-b border-cyber-border/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo & Clan Name -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-cyan-400 flex items-center justify-center font-black text-2xl text-white shadow-lg glow-cyan border border-cyan-300/40">
+                        <i class="fa-solid fa-shield-halved text-cyan-200"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent block uppercase text-glow-cyan">NEVERLOSE.3D</span>
+                        <span class="text-[10px] text-cyan-400/90 font-bold tracking-widest block -mt-1 uppercase flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Free Fire E-Sports Clan
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Desktop Nav Links -->
+                <div class="hidden md:flex items-center space-x-2">
+                    <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-cyan-400 bg-cyan-500/10 border border-cyan-500/20">
+                        <i class="fa-solid fa-house mr-1.5"></i> หน้าหลัก
+                    </button>
+                    <button onclick="switchTab('roster')" id="nav-roster" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-gray-300 hover:text-white hover:bg-cyber-card">
+                        <i class="fa-solid fa-users mr-1.5"></i> รายชื่อแคลน
+                    </button>
+                    <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-gray-300 hover:text-white hover:bg-cyber-card relative">
+                        <i class="fa-solid fa-comments mr-1.5 text-cyan-400"></i> แชทแคลน
+                        <span id="chat-lock-icon" class="ml-1 text-[10px] text-amber-400"><i class="fa-solid fa-lock"></i></span>
+                    </button>
+                    <button onclick="switchTab('tryout')" id="nav-tryout" class="nav-btn px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-gray-300 hover:text-white hover:bg-cyber-card">
+                        <i class="fa-solid fa-clipboard-check mr-1.5"></i> สมัครเทสแคลน
+                    </button>
+                    <button onclick="switchTab('admin')" id="nav-admin" class="nav-btn hidden px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-cyan-300 hover:text-white hover:bg-cyber-card relative">
+                        <i class="fa-solid fa-user-shield mr-1.5"></i> แผงจัดการ & เทสแคลน
+                        <span id="pending-badge" class="hidden absolute -top-1 -right-1 bg-cyan-500 text-black text-xs w-5 h-5 rounded-full flex items-center justify-center font-black animate-bounce">0</span>
+                    </button>
+                </div>
+
+                <!-- User / Auth Info Button -->
+                <div class="flex items-center gap-3">
+                    <div id="user-info-pill" class="hidden items-center gap-2 bg-cyber-card border border-cyber-border px-3 py-1.5 rounded-2xl text-xs text-gray-200 font-semibold">
+                        <span id="user-role-badge" class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        <div class="flex flex-col">
+                            <span id="user-display-name" class="font-bold text-white leading-tight">ผู้ใช้</span>
+                            <span id="user-unique-id" class="text-[10px] font-mono text-cyan-400 font-semibold">#NVL-0000</span>
+                        </div>
+                        <button onclick="openProfileModal()" class="ml-1 text-cyan-300 hover:text-white text-xs px-2.5 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 transition flex items-center gap-1 font-semibold" title="แก้ไขโปรไฟล์ / เปลี่ยนรูป">
+                            <i class="fa-solid fa-user-pen"></i> โปรไฟล์
+                        </button>
+                    </div>
+                    
+                    <button id="auth-btn" onclick="handleAuthBtnClick()" class="bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold px-5 py-2.5 rounded-xl text-sm shadow-md hover:shadow-cyan-500/30 transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket" id="auth-btn-icon"></i>
+                        <span id="auth-btn-text">เข้าสู่ระบบ / สมัครสมาชิก</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        
+        <!-- SECTION: HOME / HERO -->
+        <section id="section-home" class="space-y-12">
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden border border-cyber-border bg-gradient-to-r from-cyber-dark via-cyber-card to-cyber-dark p-8 sm:p-12 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 glow-cyan">
+                <div class="space-y-6 max-w-2xl text-center md:text-left z-10">
+                    <div class="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 px-4 py-1.5 rounded-full text-sm font-semibold">
+                        <i class="fa-solid fa-shield-halved text-cyan-400 animate-pulse"></i> เปิดรับสมัครเทสแคลนสายแข่ง & คอนเทนต์
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white">
+                        ยินดีต้อนรับสู่ <br>
+                        <span class="bg-gradient-to-r from-cyan-400 via-blue-300 to-white bg-clip-text text-transparent text-glow-cyan">NEVERLOSE.3D</span>
+                    </h1>
+                    <p class="text-gray-300 text-base sm:text-lg leading-relaxed">
+                        แคลน Free Fire รวมตัวผู้เล่นระดับท็อป พร้อมระบบ User ID เฉพาะตัว, ช่องแชทสำหรับสมาชิกแคลนคุยเล่น/นัดแข่งแบบเรียลไทม์ และแผงควบคุมดูแลสมาชิก
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
+                        <button onclick="switchTab('tryout')" class="bg-gradient-to-r from-cyan-400 to-blue-600 hover:scale-105 text-black font-extrabold px-8 py-3.5 rounded-xl text-base shadow-lg shadow-cyan-500/30 transition-all duration-200 flex items-center gap-2">
+                            <i class="fa-solid fa-gamepad"></i> สมัครเข้าแคลนตอนนี้
+                        </button>
+                        <button onclick="switchTab('chat')" class="bg-cyber-cardLight/80 hover:bg-cyber-cardLight text-cyan-300 border border-cyber-border px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 flex items-center gap-2">
+                            <i class="fa-solid fa-comments text-cyan-400"></i> เข้าสู่แชทแคลน
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Banner Badge Element -->
+                <div class="relative flex justify-center items-center w-full md:w-auto">
+                    <div class="w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-gradient-to-tr from-cyan-500/20 to-blue-600/20 blur-3xl absolute"></div>
+                    <div class="relative bg-cyber-card/90 border border-cyan-500/30 p-6 rounded-3xl shadow-2xl backdrop-blur-md w-full max-w-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">สถานะแคลน</span>
+                            <span class="text-xs font-black text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">RECRUITING OPEN</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-cyber-dark/80 p-3 rounded-2xl border border-cyber-border">
+                                <div class="text-2xl font-black text-cyan-400" id="stat-total-members">0</div>
+                                <div class="text-xs text-gray-400 font-medium">สมาชิกทั้งหมด</div>
+                            </div>
+                            <div class="bg-cyber-dark/80 p-3 rounded-2xl border border-cyber-border">
+                                <div class="text-2xl font-black text-amber-400" id="stat-pending-tryouts">0</div>
+                                <div class="text-xs text-gray-400 font-medium">รอการเทส</div>
+                            </div>
+                        </div>
+                        <div class="pt-2 text-xs text-center text-cyan-300/80 font-medium flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-cyan-400"></i> ระบบ User ID & ช่องแชทแคลนเฉพาะสมาชิก
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-cyber-card border border-cyber-border p-6 rounded-3xl space-y-3 glow-card transition-all">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">ระบบ User ID ประจำตัว</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">ทุกบัญชีผู้ใช้จะได้รับรหัสประจำตัว Unique User ID (#NVL-XXXX) และสามารถปรับแต่งรูปโปรไฟล์, IG, และ FF UID ได้ตามใจชอบ</p>
+                </div>
+                <div class="bg-cyber-card border border-cyber-border p-6 rounded-3xl space-y-3 glow-card transition-all">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">แชทแคลนเฉพาะสมาชิกที่ผ่านเทส</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">เมื่อเทสเข้าแคลนสำเร็จและได้รับอนุมัติ จะล็อกอินเห็นห้องแชทแคลนเพื่อพูดคุย นัดเล่นซ้อม และสื่อสารกับเพื่อนๆ ในแคลน</p>
+                </div>
+                <div class="bg-cyber-card border border-cyber-border p-6 rounded-3xl space-y-3 glow-card transition-all">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">แผงจัดการสำหรับ Admin</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">แอดมินสามารถลบหรือเพิ่มสมาชิกโดยตรง อนุมัติการเทสแคลน ปรับเปลี่ยนยศ และดูแลความสงบในห้องแชทได้ทันที</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: CLAN ROSTER -->
+        <section id="section-roster" class="hidden space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cyber-border pb-6">
+                <div>
+                    <h2 class="text-3xl font-black text-white flex items-center gap-3">
+                        <i class="fa-solid fa-users text-cyan-400"></i> รายชื่อสมาชิกในแคลน
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">สมาชิกและโครงสร้างบริหารแคลน NEVERLOSE.3D</p>
+                </div>
+                
+                <!-- Filter Tabs -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterRoster('ALL')" class="roster-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyan-500 text-black" data-role="ALL">ทั้งหมด</button>
+                    <button onclick="filterRoster('หัวแคลน')" class="roster-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-gray-300 hover:bg-cyber-cardLight border border-cyber-border" data-role="หัวแคลน">👑 หัวแคลน</button>
+                    <button onclick="filterRoster('รองแคลน')" class="roster-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-gray-300 hover:bg-cyber-cardLight border border-cyber-border" data-role="รองแคลน">⚔️ รองแคลน</button>
+                    <button onclick="filterRoster('ที่ปรึกษา')" class="roster-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-gray-300 hover:bg-cyber-cardLight border border-cyber-border" data-role="ที่ปรึกษา">🧠 ที่ปรึกษา</button>
+                    <button onclick="filterRoster('สมาชิก')" class="roster-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-gray-300 hover:bg-cyber-cardLight border border-cyber-border" data-role="สมาชิก">🎯 สมาชิก</button>
+                </div>
+            </div>
+
+            <!-- Members Grid -->
+            <div id="roster-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Dynamic Content Generated via JS -->
+            </div>
+        </section>
+
+        <!-- SECTION: CLAN CHATROOM (Exclusive to Approved Members & Admin) -->
+        <section id="section-chat" class="hidden space-y-6">
+            <div class="border-b border-cyber-border pb-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-black text-white flex items-center gap-3">
+                        <i class="fa-solid fa-comments text-cyan-400"></i> ห้องแชทเฉพาะสมาชิกแคลน
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">สื่อสาร พูดคุย นัดตี้ ซ้อมแข่ง สำหรับสมาชิกแคลน NEVERLOSE.3D เท่านั้น</p>
+                </div>
+                <div class="hidden sm:flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span class="text-xs text-emerald-400 font-bold">เปิดใช้งานระบบสื่อสารแคลน</span>
+                </div>
+            </div>
+
+            <!-- CHAT ACCESS RESTRICTED WARNING -->
+            <div id="chat-restricted-banner" class="hidden bg-cyber-card border border-red-500/40 rounded-3xl p-8 text-center space-y-4 max-w-2xl mx-auto glow-card my-12">
+                <div class="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 mx-auto flex items-center justify-center text-4xl shadow-lg">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-2xl font-black text-white">เฉพาะสมาชิกแคลนที่ได้รับอนุมัติเท่านั้น!</h3>
+                <p class="text-gray-300 text-sm leading-relaxed">
+                    คุณยังไม่ได้เข้าสู่ระบบ หรือยังไม่ได้เป็นสมาชิกแคลน NEVERLOSE.3D ที่ได้รับอนุมัติ <br>
+                    หากเทสเข้าแคลนผ่านแล้ว กรุณาเข้าสู่ระบบด้วยบัญชีสมาชิกของคุณ หรือส่งแบบฟอร์มสมัครเทสแคลน
+                </p>
+                <div class="flex items-center justify-center gap-4 pt-2">
+                    <button onclick="openLoginModal()" class="bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-extrabold px-6 py-2.5 rounded-xl text-sm shadow-md hover:scale-105 transition">
+                        <i class="fa-solid fa-right-to-bracket mr-1"></i> เข้าสู่ระบบ
+                    </button>
+                    <button onclick="switchTab('tryout')" class="bg-cyber-cardLight border border-cyber-border text-cyan-300 font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-cyber-border transition">
+                        <i class="fa-solid fa-clipboard-check mr-1"></i> สมัครเทสแคลน
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHAT MAIN CONTAINER (Shows only when Authorized) -->
+            <div id="chat-main-container" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                
+                <!-- Left Sidebar: Online / Clan Members Quick Roster -->
+                <div class="bg-cyber-card border border-cyber-border rounded-3xl p-5 space-y-4 lg:col-span-1 hidden lg:block h-[580px] flex flex-col">
+                    <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-users text-cyan-400"></i> สมาชิกทั้งหมด (<span id="chat-member-count">0</span>)
+                        </h3>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+
+                    <div id="chat-sidebar-members" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                        <!-- Dynamic Clan Members list in Chat Sidebar -->
+                    </div>
+                </div>
+
+                <!-- Chat Feed Area -->
+                <div class="bg-cyber-card border border-cyber-border rounded-3xl p-4 sm:p-6 lg:col-span-3 flex flex-col h-[580px] glow-cyan">
+                    
+                    <!-- Chat Header -->
+                    <div class="flex items-center justify-between border-b border-cyber-border pb-3 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-comments"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-white text-base">NEVERLOSE.3D Main Clan Chat</h3>
+                                <p class="text-xs text-gray-400">แชทรวมสมาชิกทุกยศ สื่อสารอย่างสุภาพ</p>
+                            </div>
+                        </div>
+
+                        <!-- Admin Clear Chat Option -->
+                        <div id="chat-admin-actions" class="hidden">
+                            <button onclick="clearChatMessages()" class="text-xs bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/40 px-3 py-1.5 rounded-xl font-bold transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i> เคลียร์แชท
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages Feed Scroll Area -->
+                    <div id="chat-feed" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
+                        <!-- Dynamic Chat Messages -->
+                    </div>
+
+                    <!-- Quick Emoji Pickers -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 text-sm">
+                        <button onclick="insertChatEmoji('🔥')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">🔥</button>
+                        <button onclick="insertChatEmoji('👑')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">👑</button>
+                        <button onclick="insertChatEmoji('🎯')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">🎯</button>
+                        <button onclick="insertChatEmoji('⚔️')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">⚔️</button>
+                        <button onclick="insertChatEmoji('💪')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">💪</button>
+                        <button onclick="insertChatEmoji('😎')" class="px-2 py-1 bg-cyber-dark hover:bg-cyber-cardLight rounded-lg border border-cyber-border">😎</button>
+                        <button onclick="insertChatEmoji(' GG ')" class="px-2.5 py-1 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 rounded-lg border border-cyan-500/40 text-xs font-bold">GG</button>
+                        <button onclick="insertChatEmoji(' พร้อมแข่งครับ! ')" class="px-2.5 py-1 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg border border-blue-500/40 text-xs font-bold">พร้อมแข่ง!</button>
+                    </div>
+
+                    <!-- Message Input Form -->
+                    <form onsubmit="handleSendChatMessage(event)" class="flex items-center gap-3">
+                        <input type="text" id="chat-input" placeholder="พิมพ์ข้อความคุยกับแคลนที่นี่..." required autocomplete="off" class="flex-1 bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition">
+                        <button type="submit" class="bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-500 hover:from-cyan-300 hover:to-blue-400 text-black font-extrabold px-6 py-3 rounded-xl text-sm shadow-md transition flex items-center gap-1.5 shrink-0">
+                            <span>ส่ง</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: TRYOUT FORM -->
+        <section id="section-tryout" class="hidden max-w-3xl mx-auto space-y-8">
+            <div class="text-center space-y-3">
+                <div class="inline-block p-4 rounded-3xl bg-cyan-500/10 text-cyan-400 text-3xl font-bold border border-cyan-500/30 glow-cyan">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <h2 class="text-3xl font-black text-white">แบบฟอร์มสมัครเทสเข้าแคลน</h2>
+                <p class="text-gray-400 text-sm">กรอกข้อมูล Free Fire UID และลิงก์ IG เพื่อให้ทีมงานติดต่อเทสฝีมือ เมื่ออนุมัติแล้วจะสามารถเข้าใช้งานห้องแชทแคลนได้</p>
+            </div>
+
+            <form id="tryout-form" onsubmit="handleTryoutSubmit(event)" class="bg-cyber-card border border-cyber-border p-6 sm:p-8 rounded-3xl space-y-6 glow-cyan">
+                <div class="space-y-4">
+                    <!-- Nickname / Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-solid fa-user text-cyan-400 mr-1.5"></i> ชื่อในเกม / ชื่อเล่น <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="tryout-name" required placeholder="เช่น DEVREAL_Pro / กาย" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition">
+                    </div>
+
+                    <!-- Free Fire UID -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-solid fa-id-badge text-amber-400 mr-1.5"></i> Free Fire UID (ตัวเลขไอดีเกม) <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="tryout-uid" required pattern="[0-9]+" placeholder="เช่น 1234567890" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition">
+                    </div>
+
+                    <!-- Instagram Link / Handle -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-brands fa-instagram text-pink-400 mr-1.5"></i> ลิงก์ Instagram (IG) หรือ ชื่อผู้ใช้ <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" id="tryout-ig" required placeholder="เช่น https://instagram.com/yourname หรือ @yourname" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition">
+                    </div>
+
+                    <!-- Gender Selection -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-solid fa-venus-mars text-indigo-400 mr-1.5"></i> เพศ <span class="text-red-400">*</span>
+                        </label>
+                        <select id="tryout-gender" required class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 transition">
+                            <option value="ชาย">ชาย ♂️</option>
+                            <option value="หญิง">หญิง ♀️</option>
+                            <option value="ไม่ระบุ">ไม่ระบุ ⚧️</option>
+                        </select>
+                    </div>
+
+                    <!-- Additional Contact -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-solid fa-comment-dots text-blue-400 mr-1.5"></i> ช่องทางติดต่อเพิ่มเติม (Facebook / Line)
+                        </label>
+                        <input type="text" id="tryout-contact" placeholder="เช่น FB: Somchai Gaming / Line ID: xxx" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition">
+                    </div>
+
+                    <!-- Playing Role / Reason -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">
+                            <i class="fa-solid fa-crosshairs text-cyan-400 mr-1.5"></i> ตำแหน่งที่ถนัด / เหตุผลที่อยากเข้าแคลน
+                        </label>
+                        <textarea id="tryout-note" rows="3" placeholder="บอกจุดเด่นของคุณ เช่น สไนเปอร์ / สายชาร์จ / เคยแข่งทัวร์..." class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-500 hover:from-cyan-300 hover:to-blue-400 text-black font-extrabold py-4 rounded-xl text-lg shadow-lg shadow-cyan-500/30 transition duration-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> ยื่นใบสมัครเทสแคลน
+                </button>
+            </form>
+        </section>
+
+        <!-- SECTION: ADMIN PANEL -->
+        <section id="section-admin" class="hidden space-y-8">
+            <div class="flex items-center justify-between border-b border-cyber-border pb-6">
+                <div>
+                    <h2 class="text-3xl font-black text-white flex items-center gap-3">
+                        <i class="fa-solid fa-user-shield text-cyan-400"></i> แผงจัดการ & เทสแคลน
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-1">จัดการผู้สมัครเทสแคลน เพิ่ม/ลบสมาชิก ควบคุมยูสเซอร์ทั้งหมด และปรับแต่งยศ</p>
+                </div>
+                <button onclick="logoutUser()" class="bg-cyber-card hover:bg-cyber-cardLight text-gray-300 px-4 py-2 rounded-xl text-xs font-bold border border-cyber-border transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> ออกจากระบบ
+                </button>
+            </div>
+
+            <!-- Admin Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column: Pending Tryouts & Users Management (2 Cols Wide) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Tryout Requests -->
+                    <div class="bg-cyber-card border border-cyber-border rounded-3xl p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-amber-400"></i> รายชื่อผู้สมัครรอการเทส
+                            </h3>
+                            <span id="tryout-count-badge" class="bg-cyan-500/20 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full border border-cyan-500/30">0 รายการ</span>
+                        </div>
+
+                        <div id="tryout-list-container" class="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                            <!-- Dynamic Tryout Items -->
+                        </div>
+                    </div>
+
+                    <!-- Users / Registered Accounts Admin Management Table -->
+                    <div class="bg-cyber-card border border-cyber-border rounded-3xl p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-cyber-border pb-3">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-users-gear text-cyan-400"></i> บัญชีผู้ใช้ในระบบทั้งหมด (User Management)
+                            </h3>
+                            <span class="text-xs text-gray-400 font-mono" id="admin-users-count">0 ยูสเซอร์</span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-gray-300">
+                                <thead class="bg-cyber-dark text-cyan-400 uppercase text-[10px]">
+                                    <tr>
+                                        <th class="p-3">User ID</th>
+                                        <th class="p-3">ชื่อผู้ใช้</th>
+                                        <th class="p-3">FF UID</th>
+                                        <th class="p-3">ยศ / สิทธิ์</th>
+                                        <th class="p-3 text-right">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-user-table-body" class="divide-y divide-cyber-border">
+                                    <!-- Dynamic User Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Add Manual Member & System Controls -->
+                <div class="space-y-6">
+                    <!-- Manual Add Member Card -->
+                    <div class="bg-cyber-card border border-cyber-border rounded-3xl p-6 space-y-4">
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus text-cyan-400"></i> เพิ่มสมาชิกเข้าแคลนโดยตรง
+                        </h3>
+                        <form id="admin-add-member-form" onsubmit="handleAdminAddMember(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 mb-1">ชื่อในเกม / Nickname</label>
+                                <input type="text" id="add-mem-name" required class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 mb-1">Free Fire UID</label>
+                                <input type="text" id="add-mem-uid" required pattern="[0-9]+" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 mb-1">ลิงก์ Instagram (IG)</label>
+                                <input type="text" id="add-mem-ig" required class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 mb-1">เพศ</label>
+                                <select id="add-mem-gender" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                                    <option value="ชาย">ชาย ♂️</option>
+                                    <option value="หญิง">หญิง ♀️</option>
+                                    <option value="ไม่ระบุ">ไม่ระบุ ⚧️</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-400 mb-1">ตำแหน่ง / ยศในแคลน</label>
+                                <select id="add-mem-role" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                                    <option value="สมาชิก">🎯 สมาชิก (Member)</option>
+                                    <option value="ที่ปรึกษา">🧠 ที่ปรึกษา (Advisor)</option>
+                                    <option value="รองแคลน">⚔️ รองแคลน (Vice Leader)</option>
+                                    <option value="หัวแคลน">👑 หัวแคลน (Leader)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold py-2.5 rounded-xl text-sm transition shadow">
+                                <i class="fa-solid fa-check mr-1"></i> เพิ่มลงในรายชื่อทันที
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Reset Data Option -->
+                    <div class="bg-cyber-dark/50 border border-cyber-border p-4 rounded-2xl text-center space-y-2">
+                        <button onclick="resetToDefaultData()" class="text-xs text-red-400 hover:text-red-300 underline font-semibold">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> รีเซ็ตกลับเป็นข้อมูลเริ่มต้น
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-cyber-border bg-cyber-dark py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="text-gray-400 text-sm">© 2026 <span class="font-bold text-cyan-400 text-glow-cyan">NEVERLOSE.3D</span>. Free Fire Clan Management</p>
+            <p class="text-gray-600 text-xs">ระบบเทสแคลน, ยูสไอดีประจำตัว และห้องแชทเฉพาะสมาชิก E-Sports</p>
+            <p id="firebase-sync-status" class="text-[10px] text-gray-600 mt-1">กำลังเชื่อมต่อระบบ Live Sync...</p>
+        </div>
+    </footer>
+
+    <!-- MODAL: AUTHENTICATION (LOGIN & REGISTER) -->
+    <div id="login-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-cyber-card border border-cyber-border w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 relative glow-cyan">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <!-- Auth Tabs -->
+            <div class="flex border-b border-cyber-border pb-2 gap-4">
+                <button id="tab-btn-login" onclick="switchAuthTab('login')" class="flex-1 text-center pb-2 text-lg font-bold border-b-2 border-cyan-400 text-cyan-400">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> เข้าสู่ระบบ
+                </button>
+                <button id="tab-btn-register" onclick="switchAuthTab('register')" class="flex-1 text-center pb-2 text-lg font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-200">
+                    <i class="fa-solid fa-user-plus mr-1"></i> สมัครสมาชิก
+                </button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" id="login-username" required placeholder="ป้อนชื่อผู้ใช้" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">รหัสผ่าน (Password)</label>
+                    <input type="password" id="login-password" required placeholder="ป้อนรหัสผ่าน" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 via-blue-600 to-cyan-500 hover:from-cyan-300 hover:to-blue-500 text-black font-extrabold py-3.5 rounded-xl text-base shadow-md">
+                    ยืนยันเข้าสู่ระบบ
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">ตั้งชื่อผู้ใช้ (Username) <span class="text-red-400">*</span></label>
+                    <input type="text" id="reg-username" required placeholder="เช่น Player123" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">ตั้งรหัสผ่าน (Password) <span class="text-red-400">*</span></label>
+                    <input type="password" id="reg-password" required placeholder="อย่างน้อย 4 ตัวอักษร" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">เพศ (Gender) <span class="text-red-400">*</span></label>
+                    <select id="reg-gender" required class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400">
+                        <option value="ชาย">ชาย ♂️</option>
+                        <option value="หญิง">หญิง ♀️</option>
+                        <option value="ไม่ระบุ">ไม่ระบุ ⚧️</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">Free Fire UID (ตัวเลขไอดี)</label>
+                    <input type="text" id="reg-uid" pattern="[0-9]*" placeholder="เช่น 123456789" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">ลิงก์ Instagram (IG)</label>
+                    <input type="text" id="reg-ig" placeholder="เช่น @yourname" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-black font-extrabold py-3.5 rounded-xl text-base shadow-md">
+                    สมัครสมาชิกใหม่ (สร้าง User ID อัตโนมัติ)
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT PROFILE & CHANGE AVATAR -->
+    <div id="profile-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-cyber-card border border-cyber-border w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 relative glow-cyan">
+            <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="border-b border-cyber-border pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-pen text-cyan-400"></i> แก้ไขโปรไฟล์ส่วนตัว
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-1">ปรับแต่งรูปภาพ, ชื่อ, เพศ, และข้อมูลส่วนตัวของคุณ</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-gray-400 block font-semibold uppercase">User ID</span>
+                    <span id="modal-user-id" class="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">#NVL-0000</span>
+                </div>
+            </div>
+
+            <form id="form-edit-profile" onsubmit="handleSaveProfile(event)" class="space-y-4">
+                <!-- Avatar Preview & Selection -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-2">รูปโปรไฟล์ (อัปโหลดรูป, เลือกอีโมจิ หรือวางลิงก์)</label>
+                    <div class="flex items-center gap-4 mb-3">
+                        <div id="profile-avatar-preview" class="w-16 h-16 rounded-2xl bg-cyber-dark border-2 border-cyan-400 flex items-center justify-center text-3xl overflow-hidden shadow-lg shrink-0">
+                            🔥
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <label class="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm w-full sm:w-auto justify-center">
+                                <i class="fa-solid fa-cloud-arrow-up text-cyan-400 text-sm"></i>
+                                <span>อัปโหลดรูปจากอุปกรณ์</span>
+                                <input type="file" id="edit-avatar-file" accept="image/*" class="hidden" onchange="handleAvatarFileUpload(event)">
+                            </label>
+
+                            <input type="text" id="edit-avatar-input" placeholder="ใส่อีโมจิ หรือวาง URL รูปภาพ" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400" oninput="updateAvatarPreview(this.value)">
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Emoji Selector Grid -->
+                    <div class="grid grid-cols-8 gap-1.5 bg-cyber-dark p-2.5 rounded-xl border border-cyber-border">
+                        <button type="button" onclick="selectEmojiAvatar('🛡️')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🛡️</button>
+                        <button type="button" onclick="selectEmojiAvatar('⚡')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">⚡</button>
+                        <button type="button" onclick="selectEmojiAvatar('👑')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">👑</button>
+                        <button type="button" onclick="selectEmojiAvatar('⚔️')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">⚔️</button>
+                        <button type="button" onclick="selectEmojiAvatar('🎯')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🎯</button>
+                        <button type="button" onclick="selectEmojiAvatar('💀')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">💀</button>
+                        <button type="button" onclick="selectEmojiAvatar('🦊')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🦊</button>
+                        <button type="button" onclick="selectEmojiAvatar('🐉')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🐉</button>
+                        <button type="button" onclick="selectEmojiAvatar('🐺')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🐺</button>
+                        <button type="button" onclick="selectEmojiAvatar('🦁')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🦁</button>
+                        <button type="button" onclick="selectEmojiAvatar('🐯')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🐯</button>
+                        <button type="button" onclick="selectEmojiAvatar('💎')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">💎</button>
+                        <button type="button" onclick="selectEmojiAvatar('🎮')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🎮</button>
+                        <button type="button" onclick="selectEmojiAvatar('👻')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">👻</button>
+                        <button type="button" onclick="selectEmojiAvatar('🤖')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🤖</button>
+                        <button type="button" onclick="selectEmojiAvatar('🔥')" class="p-1 text-lg rounded-lg hover:bg-cyber-cardLight transition">🔥</button>
+                    </div>
+                </div>
+
+                <!-- Display Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">ชื่อผู้ใช้ / ชื่อแสดงผล</label>
+                    <input type="text" id="edit-profile-name" required class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <!-- Gender -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">เพศ (Gender)</label>
+                    <select id="edit-profile-gender" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                        <option value="ชาย">ชาย ♂️</option>
+                        <option value="หญิง">หญิง ♀️</option>
+                        <option value="ไม่ระบุ">ไม่ระบุ ⚧️</option>
+                    </select>
+                </div>
+
+                <!-- UID & IG -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Free Fire UID</label>
+                    <input type="text" id="edit-profile-uid" placeholder="เช่น 123456789" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Instagram (IG)</label>
+                    <input type="text" id="edit-profile-ig" placeholder="เช่น @yourname" class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <!-- New Password Option -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">เปลี่ยนรหัสผ่านใหม่ (เว้นว่างไว้หากไม่ต้องการเปลี่ยน)</label>
+                    <input type="password" id="edit-profile-password" placeholder="รหัสผ่านใหม่..." class="w-full bg-cyber-dark border border-cyber-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-black font-extrabold py-3 rounded-xl text-sm shadow-md transition">
+                    บันทึกการเปลี่ยนแปลง
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION OVERLAY -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Helper to generate Unique User ID
+        function generateUniqueUserId() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return `NVL-${randomNum}`;
+        }
+
+        // Initial Mock Data with Unique User IDs
+        const DEFAULT_MEMBERS = [
+            { id: 1, userId: 'NVL-1001', name: 'NEVERLOSE_BOSS', uid: '984512304', ig: 'https://instagram.com/neverlose_boss', role: 'หัวแคลน', avatar: '👑', gender: 'ชาย' },
+            { id: 2, userId: 'NVL-1002', name: 'Viper_FF', uid: '761239845', ig: 'https://instagram.com/viper_ff', role: 'รองแคลน', avatar: '⚔️', gender: 'ชาย' },
+            { id: 3, userId: 'NVL-1003', name: 'Kage_Tactics', uid: '542198301', ig: 'https://instagram.com/kage_advisor', role: 'ที่ปรึกษา', avatar: '🧠', gender: 'ชาย' },
+            { id: 4, userId: 'NVL-1004', name: 'Ghost_Rusher', uid: '881230491', ig: 'https://instagram.com/ghost_ff', role: 'สมาชิก', avatar: '🎯', gender: 'ชาย' },
+            { id: 5, userId: 'NVL-1005', name: 'SniperQueen', uid: '331092841', ig: 'https://instagram.com/queen_snipe', role: 'สมาชิก', avatar: '🎯', gender: 'หญิง' }
+        ];
+
+        const DEFAULT_TRYOUTS = [
+            { id: 101, name: 'ShadowX', uid: '445120938', ig: 'https://instagram.com/shadowx_ff', gender: 'ชาย', contact: 'FB: Shadow Gaming', note: 'สายชาร์จปืนสั้น แข่งทัวร์โรงเรียนมาครับ', date: '22/08/2026' }
+        ];
+
+        // Registered Users Database
+        const DEFAULT_USERS = [
+            { userId: 'NVL-9999', username: 'Devreal', pass: '1005', role: 'admin', uid: '999999999', ig: '@devreal_admin', gender: 'ชาย', avatar: '🛡️' },
+            { userId: 'NVL-1001', username: 'NEVERLOSE_BOSS', pass: '1234', role: 'user', uid: '984512304', ig: '@neverlose_boss', gender: 'ชาย', avatar: '👑' },
+            { userId: 'NVL-1004', username: 'Ghost_Rusher', pass: '1234', role: 'user', uid: '881230491', ig: '@ghost_ff', gender: 'ชาย', avatar: '🎯' }
+        ];
+
+        // Default Clan Chat Messages
+        const DEFAULT_CHAT_MESSAGES = [
+            {
+                id: 1,
+                userId: 'NVL-1001',
+                senderName: 'NEVERLOSE_BOSS',
+                senderRole: 'หัวแคลน',
+                senderAvatar: '👑',
+                message: 'ยินดีต้อนรับสมาชิกใหม่ทุกคนสู่แคลน NEVERLOSE.3D นะครับ 🔥!',
+                timestamp: '14:20'
+            },
+            {
+                id: 2,
+                userId: 'NVL-1002',
+                senderName: 'Viper_FF',
+                senderRole: 'รองแคลน',
+                senderAvatar: '⚔️',
+                message: 'เย็นนี้ 19.00 น. มีห้องซ้อม 4v4 สายแข่งเตรียมตัวด้วยนะครับ 🎯',
+                timestamp: '14:25'
+            },
+            {
+                id: 3,
+                userId: 'NVL-1004',
+                senderName: 'Ghost_Rusher',
+                senderRole: 'สมาชิก',
+                senderAvatar: '🎯',
+                message: 'รับทราบครับหัวแคลน! พร้อมลุยครับ 💪',
+                timestamp: '14:28'
+            }
+        ];
+
+        // Application State
+        let members = JSON.parse(localStorage.getItem('neverlose_members')) || DEFAULT_MEMBERS;
+        let tryouts = JSON.parse(localStorage.getItem('neverlose_tryouts')) || DEFAULT_TRYOUTS;
+        let registeredUsers = JSON.parse(localStorage.getItem('neverlose_users')) || DEFAULT_USERS;
+        let chatMessages = JSON.parse(localStorage.getItem('neverlose_chat_messages')) || DEFAULT_CHAT_MESSAGES;
+        let currentUser = JSON.parse(localStorage.getItem('neverlose_current_user')) || null;
+        let currentRoleFilter = 'ALL';
+
+        // Save State to LocalStorage
+        function saveState() {
+            localStorage.setItem('neverlose_members', JSON.stringify(members));
+            localStorage.setItem('neverlose_tryouts', JSON.stringify(tryouts));
+            localStorage.setItem('neverlose_users', JSON.stringify(registeredUsers));
+            localStorage.setItem('neverlose_chat_messages', JSON.stringify(chatMessages));
+            localStorage.setItem('neverlose_current_user', JSON.stringify(currentUser));
+            updateStats();
+
+            // Firebase Live Sync (จาก index1.html) — index.html ยังคงเป็นตัวหลัก
+            if (window.NVL_FIREBASE_SYNC) {
+                window.NVL_FIREBASE_SYNC.pushState({
+                    members,
+                    chatMessages
+                });
+            }
+        }
+
+        // Bridge ให้ Firebase module อัปเดต state ของ index.html ได้อย่างปลอดภัย
+        window.NVL_APPLY_FIREBASE_STATE = function(state) {
+            if (!state) return;
+            if (Array.isArray(state.members)) members = state.members;
+            if (Array.isArray(state.chatMessages)) chatMessages = state.chatMessages;
+
+            localStorage.setItem('neverlose_members', JSON.stringify(members));
+            localStorage.setItem('neverlose_chat_messages', JSON.stringify(chatMessages));
+
+            if (typeof renderRoster === 'function') renderRoster();
+            if (typeof renderAdminUserTable === 'function') renderAdminUserTable();
+            if (typeof renderChatView === 'function') renderChatView();
+            if (typeof updateStats === 'function') updateStats();
+        };
+
+        // Helper Check Admin
+        function isAdminLoggedIn() {
+            return currentUser && currentUser.username.toLowerCase() === 'devreal';
+        }
+
+        // Check if current user is an approved Clan Member or Admin
+        function isApprovedClanMember() {
+            if (!currentUser) return false;
+            if (isAdminLoggedIn()) return true;
+
+            const isMember = members.some(
+                m => m.name.toLowerCase() === currentUser.username.toLowerCase() || 
+                     (currentUser.uid && m.uid === currentUser.uid) ||
+                     (currentUser.userId && m.userId === currentUser.userId)
+            );
+            return isMember;
+        }
+
+        // Check if current user is Admin, Leader, Vice Leader, or Advisor
+        function canManageTryouts() {
+            if (!currentUser) return false;
+            if (isAdminLoggedIn()) return true;
+
+            const userMember = members.find(
+                m => m.name.toLowerCase() === currentUser.username.toLowerCase() || 
+                     (currentUser.uid && m.uid === currentUser.uid) ||
+                     (currentUser.userId && m.userId === currentUser.userId)
+            );
+            if (userMember && ['หัวแคลน', 'รองแคลน', 'ที่ปรึกษา'].includes(userMember.role)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        function getUserRoleTitle() {
+            if (isAdminLoggedIn()) return 'ADMIN';
+            const userMember = members.find(
+                m => m.name.toLowerCase() === currentUser.username.toLowerCase() || 
+                     (currentUser.uid && m.uid === currentUser.uid) ||
+                     (currentUser.userId && m.userId === currentUser.userId)
+            );
+            if (userMember) return userMember.role;
+            return currentUser.role || 'สมาชิก';
+        }
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            // Ensure every user and member has a unique userId
+            ensureUserIds();
+
+            updateAuthUI();
+            renderRoster();
+            renderTryouts();
+            renderChatView();
+            renderAdminUserTable();
+            updateStats();
+        });
+
+        function ensureUserIds() {
+            let updated = false;
+            registeredUsers.forEach(u => {
+                if (!u.userId) {
+                    u.userId = generateUniqueUserId();
+                    updated = true;
+                }
+            });
+            members.forEach(m => {
+                if (!m.userId) {
+                    m.userId = generateUniqueUserId();
+                    updated = true;
+                }
+            });
+            if (currentUser && !currentUser.userId) {
+                const found = registeredUsers.find(u => u.username.toLowerCase() === currentUser.username.toLowerCase());
+                currentUser.userId = found ? found.userId : generateUniqueUserId();
+                updated = true;
+            }
+            if (updated) saveState();
+        }
+
+        // Click handler for Top Navbar Auth Button
+        function handleAuthBtnClick() {
+            if (currentUser) {
+                logoutUser();
+            } else {
+                openLoginModal();
+            }
+        }
+
+        // Auth Modal Controls
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-modal').classList.add('flex');
+            switchAuthTab('login');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('flex');
+        }
+
+        function switchAuthTab(tab) {
+            const loginTabBtn = document.getElementById('tab-btn-login');
+            const regTabBtn = document.getElementById('tab-btn-register');
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+
+            if (tab === 'login') {
+                loginTabBtn.className = 'flex-1 text-center pb-2 text-lg font-bold border-b-2 border-cyan-400 text-cyan-400';
+                regTabBtn.className = 'flex-1 text-center pb-2 text-lg font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-200';
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+            } else {
+                regTabBtn.className = 'flex-1 text-center pb-2 text-lg font-bold border-b-2 border-emerald-400 text-emerald-400';
+                loginTabBtn.className = 'flex-1 text-center pb-2 text-lg font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-200';
+                regForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+        // Handle Login Submission
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+
+            // Admin check: Devreal & 1005
+            if (usernameInput.toLowerCase() === 'devreal' && passwordInput === '1005') {
+                currentUser = { 
+                    userId: 'NVL-9999',
+                    username: 'Devreal', 
+                    role: 'admin', 
+                    uid: '999999999', 
+                    ig: '@devreal_admin', 
+                    avatar: '🛡️', 
+                    gender: 'ชาย' 
+                };
+                saveState();
+                updateAuthUI();
+                closeLoginModal();
+                showToast('ยินดีต้อนรับแอดมิน Devreal เข้าสู่ระบบ!', 'success');
+                switchTab('admin');
+                return;
+            }
+
+            // Normal User check
+            const foundUser = registeredUsers.find(
+                u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.pass === passwordInput
+            );
+
+            if (foundUser) {
+                currentUser = { 
+                    userId: foundUser.userId || generateUniqueUserId(),
+                    username: foundUser.username, 
+                    role: foundUser.role || 'user', 
+                    uid: foundUser.uid || '', 
+                    ig: foundUser.ig || '',
+                    avatar: foundUser.avatar || '🎯',
+                    gender: foundUser.gender || 'ชาย'
+                };
+                saveState();
+                updateAuthUI();
+                closeLoginModal();
+                showToast(`เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ ${foundUser.username} (${currentUser.userId})`, 'success');
+
+                if (isApprovedClanMember()) {
+                    switchTab('chat');
+                } else if (canManageTryouts()) {
+                    switchTab('admin');
+                } else {
+                    switchTab('roster');
+                }
+            } else {
+                showToast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!', 'error');
+            }
+        }
+
+        // Handle Registration
+        function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value.trim();
+            const pass = document.getElementById('reg-password').value.trim();
+            const gender = document.getElementById('reg-gender').value;
+            const uid = document.getElementById('reg-uid').value.trim();
+            const ig = document.getElementById('reg-ig').value.trim();
+
+            if (!username || !pass) {
+                showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+                return;
+            }
+
+            if (registeredUsers.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+                showToast('ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น', 'error');
+                return;
+            }
+
+            const newUserId = generateUniqueUserId();
+            const newUser = { userId: newUserId, username, pass, role: 'user', uid, ig, gender, avatar: '🎯' };
+            registeredUsers.push(newUser);
+            currentUser = { userId: newUserId, username, role: 'user', uid, ig, gender, avatar: '🎯' };
+            
+            saveState();
+            updateAuthUI();
+            closeLoginModal();
+            showToast(`สมัครสมาชิกสำเร็จ! รหัสประจำตัวของคุณคือ ${newUserId}`, 'success');
+        }
+
+        // Profile Modal Logic
+        function openProfileModal() {
+            if (!currentUser) {
+                openLoginModal();
+                return;
+            }
+            const modal = document.getElementById('profile-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.getElementById('modal-user-id').innerText = currentUser.userId || '#NVL-0000';
+            const avatar = currentUser.avatar || '🛡️';
+            document.getElementById('edit-avatar-input').value = avatar;
+            document.getElementById('edit-profile-name').value = currentUser.username || '';
+            document.getElementById('edit-profile-gender').value = currentUser.gender || 'ชาย';
+            document.getElementById('edit-profile-uid').value = currentUser.uid || '';
+            document.getElementById('edit-profile-ig').value = currentUser.ig || '';
+            document.getElementById('edit-profile-password').value = '';
+            updateAvatarPreview(avatar);
+        }
+
+        function closeProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectEmojiAvatar(emoji) {
+            document.getElementById('edit-avatar-input').value = emoji;
+            updateAvatarPreview(emoji);
+        }
+
+        function handleAvatarFileUpload(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 3 * 1024 * 1024) {
+                showToast('ขนาดไฟล์รูปใหญ่เกินไป (กรุณาใช้รูปขนาดไม่เกิน 3MB)', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Url = evt.target.result;
+                document.getElementById('edit-avatar-input').value = base64Url;
+                updateAvatarPreview(base64Url);
+                showToast('อัปโหลดรูปภาพสำเร็จ!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateAvatarPreview(val) {
+            const preview = document.getElementById('profile-avatar-preview');
+            if (val && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image/'))) {
+                preview.innerHTML = `<img src="${val}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/00f0ff/000000?text=FF'">`;
+            } else {
+                preview.innerHTML = val || '🛡️';
+            }
+        }
+
+        function handleSaveProfile(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const oldUsername = currentUser.username;
+            const newName = document.getElementById('edit-profile-name').value.trim();
+            const avatarVal = document.getElementById('edit-avatar-input').value.trim() || '🛡️';
+            const genderVal = document.getElementById('edit-profile-gender').value;
+            const uidVal = document.getElementById('edit-profile-uid').value.trim();
+            const igVal = document.getElementById('edit-profile-ig').value.trim();
+            const newPass = document.getElementById('edit-profile-password').value.trim();
+
+            if (!newName) {
+                showToast('กรุณาระบุชื่อผู้ใช้', 'error');
+                return;
+            }
+
+            currentUser.username = newName;
+            currentUser.avatar = avatarVal;
+            currentUser.gender = genderVal;
+            currentUser.uid = uidVal;
+            currentUser.ig = igVal;
+
+            // Update user record
+            const regUser = registeredUsers.find(u => u.userId === currentUser.userId || u.username.toLowerCase() === oldUsername.toLowerCase());
+            if (regUser) {
+                regUser.username = newName;
+                regUser.avatar = avatarVal;
+                regUser.gender = genderVal;
+                regUser.uid = uidVal;
+                regUser.ig = igVal;
+                if (newPass) regUser.pass = newPass;
+            }
+
+            // Sync with clan members list if exists
+            const memberObj = members.find(m => m.userId === currentUser.userId || m.name.toLowerCase() === oldUsername.toLowerCase());
+            if (memberObj) {
+                memberObj.name = newName;
+                memberObj.avatar = avatarVal;
+                memberObj.gender = genderVal;
+                if (uidVal) memberObj.uid = uidVal;
+                if (igVal) memberObj.ig = igVal;
+            }
+
+            saveState();
+            updateAuthUI();
+            renderRoster();
+            renderChatView();
+            renderAdminUserTable();
+            closeProfileModal();
+            showToast('อัปเดตข้อมูลโปรไฟล์ส่วนตัวเรียบร้อยแล้ว!', 'success');
+        }
+
+        // Direct Logout Function
+        function logoutUser() {
+            currentUser = null;
+            saveState();
+            updateAuthUI();
+            switchTab('home');
+            showToast('ออกจากระบบเรียบร้อยแล้ว', 'info');
+        }
+
+        function updateAuthUI() {
+            const authBtnText = document.getElementById('auth-btn-text');
+            const authBtnIcon = document.getElementById('auth-btn-icon');
+            const userInfoPill = document.getElementById('user-info-pill');
+            const userDisplayName = document.getElementById('user-display-name');
+            const userUniqueId = document.getElementById('user-unique-id');
+            const userRoleBadge = document.getElementById('user-role-badge');
+            const navAdmin = document.getElementById('nav-admin');
+            const pendingBadge = document.getElementById('pending-badge');
+            const chatLockIcon = document.getElementById('chat-lock-icon');
+
+            if (currentUser) {
+                authBtnText.innerText = 'ออกจากระบบ';
+                authBtnIcon.className = 'fa-solid fa-right-from-bracket';
+                userInfoPill.classList.remove('hidden');
+                userInfoPill.classList.add('flex');
+                userUniqueId.innerText = currentUser.userId || '#NVL-0000';
+
+                const roleTitle = getUserRoleTitle();
+                if (canManageTryouts()) {
+                    userDisplayName.innerHTML = `<span class="text-cyan-400 font-bold">${currentUser.username}</span> <span class="bg-cyan-500 text-black text-[9px] px-1.5 py-0.2 rounded font-black">${roleTitle}</span>`;
+                    userRoleBadge.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-ping';
+                    navAdmin.classList.remove('hidden');
+                } else {
+                    userDisplayName.innerText = currentUser.username;
+                    userRoleBadge.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                    navAdmin.classList.add('hidden');
+                }
+            } else {
+                authBtnText.innerText = 'เข้าสู่ระบบ / สมัครสมาชิก';
+                authBtnIcon.className = 'fa-solid fa-right-to-bracket';
+                userInfoPill.classList.add('hidden');
+                userInfoPill.classList.remove('flex');
+                navAdmin.classList.add('hidden');
+            }
+
+            // Lock icon indicator on Chat nav tab
+            if (isApprovedClanMember()) {
+                chatLockIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else {
+                chatLockIcon.innerHTML = '<i class="fa-solid fa-lock text-amber-400"></i>';
+            }
+
+            // Pending tryouts badge for Management
+            if (tryouts.length > 0 && canManageTryouts()) {
+                pendingBadge.innerText = tryouts.length;
+                pendingBadge.classList.remove('hidden');
+            } else {
+                pendingBadge.classList.add('hidden');
+            }
+
+            renderChatView();
+        }
+
+        // Tab Switching Logic with Access Protections
+        function switchTab(tabName) {
+            if (tabName === 'admin' && !canManageTryouts()) {
+                showToast('สิทธิ์เข้าถึงเฉพาะ แอดมิน, หัวแคลน, รองแคลน และ ที่ปรึกษา เท่านั้น!', 'error');
+                openLoginModal();
+                return;
+            }
+
+            const sections = ['home', 'roster', 'chat', 'tryout', 'admin'];
+            sections.forEach(s => {
+                const secEl = document.getElementById(`section-${s}`);
+                const navBtn = document.getElementById(`nav-${s}`);
+                
+                if (s === tabName) {
+                    secEl.classList.remove('hidden');
+                    if(navBtn) {
+                        navBtn.classList.add('text-cyan-400', 'bg-cyan-500/10', 'border', 'border-cyan-500/20');
+                        navBtn.classList.remove('text-gray-300');
+                    }
+                } else {
+                    secEl.classList.add('hidden');
+                    if(navBtn) {
+                        navBtn.classList.remove('text-cyan-400', 'bg-cyan-500/10', 'border', 'border-cyan-500/20');
+                        navBtn.classList.add('text-gray-300');
+                    }
+                }
+            });
+
+            if (tabName === 'chat') {
+                renderChatView();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Render Roster Grid
+        function renderRoster() {
+            const rosterContainer = document.getElementById('roster-grid');
+            if(!rosterContainer) return;
+            rosterContainer.innerHTML = '';
+
+            const filtered = currentRoleFilter === 'ALL' 
+                ? members 
+                : members.filter(m => m.role === currentRoleFilter);
+
+            if (filtered.length === 0) {
+                rosterContainer.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-cyber-card border border-cyber-border rounded-3xl">
+                        <i class="fa-solid fa-user-slash text-4xl text-gray-600 mb-3"></i>
+                        <p class="text-gray-400 font-medium">ไม่พบสมาชิกในหมวดหมู่นี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(m => {
+                let badgeClass = 'bg-cyber-dark text-gray-300 border-cyber-border';
+                let roleIcon = '🎯';
+                if (m.role === 'หัวแคลน') {
+                    badgeClass = 'bg-amber-500/10 text-amber-300 border-amber-500/40 glow-cyan';
+                    roleIcon = '👑';
+                } else if (m.role === 'รองแคลน') {
+                    badgeClass = 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40';
+                    roleIcon = '⚔️';
+                } else if (m.role === 'ที่ปรึกษา') {
+                    badgeClass = 'bg-indigo-500/10 text-indigo-300 border-indigo-500/40';
+                    roleIcon = '🧠';
+                }
+
+                let genderBadge = '';
+                if (m.gender === 'ชาย') {
+                    genderBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">♂️ ชาย</span>';
+                } else if (m.gender === 'หญิง') {
+                    genderBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30">♀️ หญิง</span>';
+                } else {
+                    genderBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">⚧️ ไม่ระบุ</span>';
+                }
+
+                let avatarHtml = '';
+                if (m.avatar && (m.avatar.startsWith('http://') || m.avatar.startsWith('https://') || m.avatar.startsWith('data:image/'))) {
+                    avatarHtml = `<img src="${m.avatar}" class="w-12 h-12 rounded-2xl object-cover border border-cyan-400/40 shadow-inner" onerror="this.src='https://placehold.co/100x100/00f0ff/000000?text=FF'">`;
+                } else {
+                    avatarHtml = `<div class="w-12 h-12 rounded-2xl bg-cyber-dark border border-cyan-500/30 flex items-center justify-center text-2xl shadow-inner">${m.avatar || '🛡️'}</div>`;
+                }
+
+                let igLink = m.ig.startsWith('http') ? m.ig : `https://instagram.com/${m.ig.replace('@','')}`;
+                const isSelf = currentUser && (currentUser.username.toLowerCase() === m.name.toLowerCase() || currentUser.userId === m.userId);
+
+                const cardHtml = `
+                    <div class="bg-cyber-card border border-cyber-border rounded-3xl p-5 space-y-4 glow-card transition-all relative group flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="px-3 py-1 rounded-full border text-xs font-extrabold flex items-center gap-1.5 ${badgeClass}">
+                                        <span>${roleIcon}</span> ${m.role}
+                                    </span>
+                                    ${genderBadge}
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    ${isSelf ? `
+                                        <button onclick="openProfileModal()" class="text-xs text-cyan-400 hover:text-cyan-300 p-1" title="แก้ไขโปรไฟล์">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${canManageTryouts() ? `
+                                        <button onclick="deleteMember(${m.id})" class="text-gray-500 hover:text-red-400 text-xs p-1" title="ลบสมาชิก">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                ${avatarHtml}
+                                <div>
+                                    <h4 class="text-lg font-bold text-white group-hover:text-cyan-300 transition">${m.name}</h4>
+                                    <div class="flex items-center gap-1 text-xs text-cyan-400 font-mono">
+                                        <i class="fa-solid fa-hashtag text-[10px]"></i> ${m.userId || 'NVL-0000'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 bg-cyber-dark/90 border border-cyber-border p-3 rounded-2xl flex items-center justify-between">
+                                <div>
+                                    <div class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Free Fire UID</div>
+                                    <div class="text-sm font-mono font-bold text-cyan-300">${m.uid}</div>
+                                </div>
+                                <button onclick="copyToClipboard('${m.uid}')" class="bg-cyber-cardLight hover:bg-cyber-border text-cyan-400 text-xs px-2.5 py-1.5 rounded-xl border border-cyber-border transition flex items-center gap-1" title="คัดลอก UID">
+                                    <i class="fa-regular fa-copy"></i> คัดลอก
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <a href="${igLink}" target="_blank" rel="noopener noreferrer" class="w-full bg-gradient-to-r from-pink-600/10 to-purple-600/10 hover:from-pink-600/20 hover:to-purple-600/20 border border-pink-500/30 text-pink-300 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                                <i class="fa-brands fa-instagram text-base"></i> ไปยัง Instagram
+                            </a>
+
+                            ${canManageTryouts() ? `
+                                <div class="mt-3 pt-3 border-t border-cyber-border flex items-center justify-between">
+                                    <span class="text-[11px] text-gray-400">ปรับยศ:</span>
+                                    <select onchange="changeMemberRole(${m.id}, this.value)" class="bg-cyber-dark text-xs text-gray-200 border border-cyber-border rounded-lg px-2 py-1 focus:outline-none">
+                                        <option value="สมาชิก" ${m.role==='สมาชิก'?'selected':''}>🎯 สมาชิก</option>
+                                        <option value="ที่ปรึกษา" ${m.role==='ที่ปรึกษา'?'selected':''}>🧠 ที่ปรึกษา</option>
+                                        <option value="รองแคลน" ${m.role==='รองแคลน'?'selected':''}>⚔️ รองแคลน</option>
+                                        <option value="หัวแคลน" ${m.role==='หัวแคลน'?'selected':''}>👑 หัวแคลน</option>
+                                    </select>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                rosterContainer.innerHTML += cardHtml;
+            });
+        }
+
+        function filterRoster(role) {
+            currentRoleFilter = role;
+            document.querySelectorAll('.roster-filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-role') === role) {
+                    btn.classList.add('bg-cyan-500', 'text-black');
+                    btn.classList.remove('bg-cyber-card', 'text-gray-300');
+                } else {
+                    btn.classList.remove('bg-cyan-500', 'text-black');
+                    btn.classList.add('bg-cyber-card', 'text-gray-300');
+                }
+            });
+            renderRoster();
+        }
+
+        // Clan Chat Feature Logic
+        function renderChatView() {
+            const restrictedBanner = document.getElementById('chat-restricted-banner');
+            const mainContainer = document.getElementById('chat-main-container');
+            const adminActions = document.getElementById('chat-admin-actions');
+            const memberCountEl = document.getElementById('chat-member-count');
+            const sidebarMembers = document.getElementById('chat-sidebar-members');
+            const chatFeed = document.getElementById('chat-feed');
+
+            if (!restrictedBanner || !mainContainer) return;
+
+            // Check authorization to see clan chat
+            if (!isApprovedClanMember()) {
+                restrictedBanner.classList.remove('hidden');
+                mainContainer.classList.add('hidden');
+                return;
+            }
+
+            restrictedBanner.classList.add('hidden');
+            mainContainer.classList.remove('hidden');
+
+            if (canManageTryouts()) {
+                adminActions.classList.remove('hidden');
+            } else {
+                adminActions.classList.add('hidden');
+            }
+
+            // Render Sidebar Clan Members
+            if (memberCountEl) memberCountEl.innerText = members.length;
+            if (sidebarMembers) {
+                sidebarMembers.innerHTML = '';
+                members.forEach(m => {
+                    let avatarHtml = m.avatar && (m.avatar.startsWith('http') || m.avatar.startsWith('data:image')) 
+                        ? `<img src="${m.avatar}" class="w-7 h-7 rounded-lg object-cover">`
+                        : `<span class="text-sm">${m.avatar || '🎯'}</span>`;
+
+                    sidebarMembers.innerHTML += `
+                        <div class="flex items-center gap-2 bg-cyber-dark/80 p-2 rounded-xl border border-cyber-border/60">
+                            <div class="w-7 h-7 rounded-lg bg-cyber-card border border-cyan-500/30 flex items-center justify-center shrink-0">
+                                ${avatarHtml}
+                            </div>
+                            <div class="truncate flex-1">
+                                <div class="text-xs font-bold text-white truncate">${m.name}</div>
+                                <div class="text-[9px] text-gray-400 font-mono">${m.userId || 'NVL-0000'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Render Messages Feed
+            if (chatFeed) {
+                chatFeed.innerHTML = '';
+                if (chatMessages.length === 0) {
+                    chatFeed.innerHTML = `
+                        <div class="text-center py-12 text-gray-500 text-xs">
+                            ยังไม่มีข้อความในห้องแชทแคลน มาเริ่มพิมพ์ข้อความแรกกันเลย!
+                        </div>
+                    `;
+                } else {
+                    chatMessages.forEach(msg => {
+                        const isSelf = currentUser && (currentUser.username.toLowerCase() === msg.senderName.toLowerCase() || currentUser.userId === msg.userId);
+
+                        let badgeColor = 'bg-cyber-dark text-gray-300';
+                        if (msg.senderRole === 'หัวแคลน') badgeColor = 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+                        else if (msg.senderRole === 'รองแคลน') badgeColor = 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+                        else if (msg.senderRole === 'ADMIN') badgeColor = 'bg-purple-500/20 text-purple-300 border border-purple-500/40';
+
+                        let avatarHtml = msg.senderAvatar && (msg.senderAvatar.startsWith('http') || msg.senderAvatar.startsWith('data:image'))
+                            ? `<img src="${msg.senderAvatar}" class="w-9 h-9 rounded-xl object-cover border border-cyan-400/40">`
+                            : `<div class="w-9 h-9 rounded-xl bg-cyber-dark border border-cyan-500/30 flex items-center justify-center text-lg shrink-0">${msg.senderAvatar || '🎯'}</div>`;
+
+                        const msgBubble = `
+                            <div class="flex items-start gap-3 ${isSelf ? 'flex-row-reverse' : ''}">
+                                ${avatarHtml}
+                                <div class="space-y-1 max-w-[80%] ${isSelf ? 'items-end text-right' : ''}">
+                                    <div class="flex items-center gap-2 ${isSelf ? 'justify-end' : ''}">
+                                        <span class="text-xs font-bold text-white">${msg.senderName}</span>
+                                        <span class="text-[9px] font-mono text-cyan-400 font-semibold">${msg.userId || ''}</span>
+                                        <span class="text-[10px] px-1.5 py-0.2 rounded font-extrabold ${badgeColor}">${msg.senderRole || 'สมาชิก'}</span>
+                                        <span class="text-[10px] text-gray-500">${msg.timestamp}</span>
+                                    </div>
+                                    <div class="inline-block px-4 py-2.5 rounded-2xl text-sm ${isSelf ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-semibold rounded-tr-none' : 'bg-cyber-cardLight border border-cyber-border text-gray-200 rounded-tl-none'}">
+                                        ${msg.message}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        chatFeed.innerHTML += msgBubble;
+                    });
+                }
+                chatFeed.scrollTop = chatFeed.scrollHeight;
+            }
+        }
+
+        function handleSendChatMessage(e) {
+            e.preventDefault();
+            if (!currentUser || !isApprovedClanMember()) {
+                showToast('เฉพาะสมาชิกแคลนเท่านั้นที่พิมพ์แชทได้', 'error');
+                return;
+            }
+
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+            const newMsg = {
+                id: Date.now(),
+                userId: currentUser.userId || 'NVL-0000',
+                senderName: currentUser.username,
+                senderRole: getUserRoleTitle(),
+                senderAvatar: currentUser.avatar || '🎯',
+                message: message,
+                timestamp: timestamp
+            };
+
+            chatMessages.push(newMsg);
+            saveState();
+            input.value = '';
+            renderChatView();
+        }
+
+        function insertChatEmoji(emoji) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value += emoji;
+                input.focus();
+            }
+        }
+
+        function clearChatMessages() {
+            if (!canManageTryouts()) return;
+            chatMessages = [];
+            saveState();
+            renderChatView();
+            showToast('ลบประวัติแชททั้งหมดเรียบร้อยแล้ว', 'info');
+        }
+
+        // Render Tryouts for Management
+        function renderTryouts() {
+            const container = document.getElementById('tryout-list-container');
+            const badge = document.getElementById('tryout-count-badge');
+            if(!container) return;
+            container.innerHTML = '';
+            badge.innerText = `${tryouts.length} รายการ`;
+
+            if (tryouts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 text-sm">
+                        <i class="fa-solid fa-circle-check text-2xl mb-2 text-cyan-400/50 block"></i>
+                        ไม่มีใบสมัครเทสแคลนที่รอการอนุมัติในขณะนี้
+                    </div>
+                `;
+                return;
+            }
+
+            tryouts.forEach(t => {
+                let igLink = t.ig.startsWith('http') ? t.ig : `https://instagram.com/${t.ig.replace('@','')}`;
+
+                const itemHtml = `
+                    <div class="bg-cyber-dark border border-cyber-border rounded-2xl p-4 space-y-3 glow-card transition">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <h4 class="font-bold text-white text-base flex items-center gap-2">
+                                    ${t.name}
+                                    <span class="text-xs font-normal text-gray-400">(${t.date})</span>
+                                </h4>
+                                <p class="text-xs text-cyan-400 font-mono">FF UID: ${t.uid}</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="${igLink}" target="_blank" rel="noopener noreferrer" class="bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+                                    <i class="fa-brands fa-instagram"></i> 💬 ติดต่อเทสทาง IG
+                                </a>
+                                <button onclick="copyToClipboard('${t.uid}')" class="bg-cyber-cardLight hover:bg-cyber-border text-cyan-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-cyber-border">
+                                    <i class="fa-regular fa-copy"></i> คัดลอก UID
+                                </button>
+                                <button onclick="approveTryout(${t.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+                                    <i class="fa-solid fa-user-check"></i> อนุมัติเป็นสมาชิก
+                                </button>
+                                <button onclick="rejectTryout(${t.id})" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                                    <i class="fa-solid fa-xmark"></i> ปฏิเสธ
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-black/40 p-3 rounded-xl border border-cyber-border/80">
+                            <div>
+                                <span class="text-gray-400">Instagram:</span>
+                                <a href="${igLink}" target="_blank" class="text-pink-300 hover:underline font-semibold ml-1">
+                                    <i class="fa-brands fa-instagram"></i> ${t.ig}
+                                </a>
+                            </div>
+                            <div>
+                                <span class="text-gray-400">ติดต่อเพิ่มเติม:</span>
+                                <span class="text-gray-200 ml-1">${t.contact}</span>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <span class="text-gray-400">หมายเหตุ / ฝีมือ / สายการเล่น:</span>
+                                <span class="text-gray-200 ml-1">${t.note}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += itemHtml;
+            });
+        }
+
+        // Render Registered Users Table in Admin Panel
+        function renderAdminUserTable() {
+            const tbody = document.getElementById('admin-user-table-body');
+            const countEl = document.getElementById('admin-users-count');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            if (countEl) countEl.innerText = `${registeredUsers.length} ยูสเซอร์`;
+
+            registeredUsers.forEach(u => {
+                const isMember = members.some(m => m.userId === u.userId || m.name.toLowerCase() === u.username.toLowerCase());
+                let statusBadge = isMember 
+                    ? '<span class="px-2 py-0.5 text-[9px] rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">สมาชิกแคลน</span>'
+                    : '<span class="px-2 py-0.5 text-[9px] rounded font-bold bg-gray-500/20 text-gray-400 border border-gray-500/30">ผู้ใช้นอกแคลน</span>';
+
+                if (u.role === 'admin') {
+                    statusBadge = '<span class="px-2 py-0.5 text-[9px] rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">ADMIN</span>';
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-cyber-dark/60 transition">
+                        <td class="p-3 font-mono text-cyan-400 font-bold">${u.userId || 'NVL-0000'}</td>
+                        <td class="p-3 font-bold text-white">${u.username}</td>
+                        <td class="p-3 font-mono text-gray-300">${u.uid || '-'}</td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3 text-right">
+                            ${u.username.toLowerCase() !== 'devreal' ? `
+                                <button onclick="deleteRegisteredUser('${u.userId}')" class="text-red-400 hover:text-red-300 bg-red-500/10 p-1.5 rounded-lg border border-red-500/20 transition" title="ลบบัญชีผู้ใช้">
+                                    <i class="fa-solid fa-trash-can"></i> ลบผู้ใช้
+                                </button>
+                            ` : '<span class="text-[10px] text-gray-500">ระบบหลัก</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteRegisteredUser(userId) {
+            if (!canManageTryouts()) return;
+            const user = registeredUsers.find(u => u.userId === userId);
+            if (user) {
+                registeredUsers = registeredUsers.filter(u => u.userId !== userId);
+                members = members.filter(m => m.userId !== userId);
+                saveState();
+                renderRoster();
+                renderAdminUserTable();
+                showToast(`ลบบัญชี ${user.username} (${userId}) เรียบร้อยแล้ว`, 'info');
+            }
+        }
+
+        function handleTryoutSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('tryout-name').value.trim();
+            const uid = document.getElementById('tryout-uid').value.trim();
+            const ig = document.getElementById('tryout-ig').value.trim();
+            const gender = document.getElementById('tryout-gender').value;
+            const contact = document.getElementById('tryout-contact').value.trim();
+            const note = document.getElementById('tryout-note').value.trim();
+
+            const newTryout = {
+                id: Date.now(),
+                name,
+                uid,
+                ig,
+                gender,
+                contact: contact || 'ไม่ได้ระบุ',
+                note: note || 'ไม่มีข้อมูลเพิ่มเติม',
+                date: new Date().toLocaleDateString('th-TH')
+            };
+
+            tryouts.push(newTryout);
+            saveState();
+            renderTryouts();
+            updateAuthUI();
+
+            document.getElementById('tryout-form').reset();
+            showToast('ยื่นใบสมัครสำเร็จ! กรุณารอทีมงานเทสแคลนติดต่อกลับทาง IG เมื่ออนุมัติแล้วจะใช้งานห้องแชทได้', 'success');
+            switchTab('roster');
+        }
+
+        function approveTryout(id) {
+            const index = tryouts.findIndex(t => t.id === id);
+            if (index !== -1) {
+                const item = tryouts[index];
+                const newUserId = generateUniqueUserId();
+
+                members.push({
+                    id: Date.now(),
+                    userId: newUserId,
+                    name: item.name,
+                    uid: item.uid,
+                    ig: item.ig,
+                    gender: item.gender || 'ชาย',
+                    role: 'สมาชิก',
+                    avatar: '🎯'
+                });
+
+                // Create User Account if not exists
+                if (!registeredUsers.some(u => u.username.toLowerCase() === item.name.toLowerCase())) {
+                    registeredUsers.push({
+                        userId: newUserId,
+                        username: item.name,
+                        pass: '1234',
+                        role: 'user',
+                        uid: item.uid,
+                        ig: item.ig,
+                        gender: item.gender || 'ชาย',
+                        avatar: '🎯'
+                    });
+                }
+
+                tryouts.splice(index, 1);
+                saveState();
+                renderRoster();
+                renderTryouts();
+                renderAdminUserTable();
+                updateAuthUI();
+                showToast(`อนุมัติคุณ ${item.name} (${newUserId}) เข้าสู่แคลนเรียบร้อยแล้ว!`, 'success');
+            }
+        }
+
+        function rejectTryout(id) {
+            tryouts = tryouts.filter(t => t.id !== id);
+            saveState();
+            renderTryouts();
+            updateAuthUI();
+            showToast('ปฏิเสธใบสมัครเรียบร้อยแล้ว', 'info');
+        }
+
+        function handleAdminAddMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('add-mem-name').value.trim();
+            const uid = document.getElementById('add-mem-uid').value.trim();
+            const ig = document.getElementById('add-mem-ig').value.trim();
+            const gender = document.getElementById('add-mem-gender').value;
+            const role = document.getElementById('add-mem-role').value;
+
+            let avatar = '🎯';
+            if (role === 'หัวแคลน') avatar = '👑';
+            else if (role === 'รองแคลน') avatar = '⚔️';
+            else if (role === 'ที่ปรึกษา') avatar = '🧠';
+
+            const newUserId = generateUniqueUserId();
+
+            members.push({
+                id: Date.now(),
+                userId: newUserId,
+                name,
+                uid,
+                ig,
+                gender,
+                role,
+                avatar
+            });
+
+            if (!registeredUsers.some(u => u.username.toLowerCase() === name.toLowerCase())) {
+                registeredUsers.push({
+                    userId: newUserId,
+                    username: name,
+                    pass: '1234',
+                    role: 'user',
+                    uid: uid,
+                    ig: ig,
+                    gender: gender,
+                    avatar: avatar
+                });
+            }
+
+            saveState();
+            renderRoster();
+            renderAdminUserTable();
+            document.getElementById('admin-add-member-form').reset();
+            showToast(`เพิ่มสมาชิก ${name} (${newUserId}) สำเร็จ!`, 'success');
+        }
+
+        function changeMemberRole(id, newRole) {
+            const member = members.find(m => m.id === id);
+            if (member) {
+                member.role = newRole;
+                if (newRole === 'หัวแคลน') member.avatar = '👑';
+                else if (newRole === 'รองแคลน') member.avatar = '⚔️';
+                else if (newRole === 'ที่ปรึกษา') member.avatar = '🧠';
+                else member.avatar = '🎯';
+                
+                saveState();
+                renderRoster();
+                showToast(`อัปเดตยศของ ${member.name} เป็น ${newRole} แล้ว`, 'info');
+            }
+        }
+
+        function deleteMember(id) {
+            const member = members.find(m => m.id === id);
+            if (member) {
+                members = members.filter(m => m.id !== id);
+                saveState();
+                renderRoster();
+                renderAdminUserTable();
+                showToast('ลบสมาชิกออกจากรายชื่อเรียบร้อยแล้ว', 'info');
+            }
+        }
+
+        function resetToDefaultData() {
+            members = DEFAULT_MEMBERS;
+            tryouts = DEFAULT_TRYOUTS;
+            registeredUsers = DEFAULT_USERS;
+            chatMessages = DEFAULT_CHAT_MESSAGES;
+            currentUser = null;
+            saveState();
+            renderRoster();
+            renderTryouts();
+            renderChatView();
+            renderAdminUserTable();
+            updateAuthUI();
+            showToast('รีเซ็ตข้อมูลทั้งหมดเรียบร้อยแล้ว', 'info');
+        }
+
+        function updateStats() {
+            const totalEl = document.getElementById('stat-total-members');
+            const pendingEl = document.getElementById('stat-pending-tryouts');
+            if (totalEl) totalEl.innerText = members.length;
+            if (pendingEl) pendingEl.innerText = tryouts.length;
+        }
+
+        function copyToClipboard(text) {
+            const dummy = document.createElement("input");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast(`คัดลอก UID: ${text} สำเร็จแล้ว`, 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-cyber-dark border-cyber-border text-white';
+            let icon = 'fa-info-circle text-cyan-400';
+            
+            if (type === 'success') {
+                bgClass = 'bg-cyber-dark border-cyan-400/50 text-cyan-300';
+                icon = 'fa-circle-check text-cyan-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-cyber-dark border-red-500/50 text-red-300';
+                icon = 'fa-circle-exclamation text-red-400';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-md ${bgClass} transition-all duration-300 transform translate-y-4 opacity-0 text-sm font-semibold`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+
+    <!-- FIREBASE LIVE SYNC
+         รวมความสามารถ Firebase Realtime Database จาก index1.html
+         โดยให้ index.html เป็น UI/ระบบหลัก และใช้ Firebase เป็นชั้น Live Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAD_Qog_Ri1kaSScwms9rNFhQ_rNb-z8jc",
+            authDomain: "neverlose-tournament.firebaseapp.com",
+            databaseURL: "https://neverlose-tournament-default-rtdb.firebaseio.com",
+            projectId: "neverlose-tournament",
+            storageBucket: "neverlose-tournament.firebasestorage.app",
+            messagingSenderId: "962959863052",
+            appId: "1:962959863052:web:2d4d0a0ded9c02f35cad29"
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getDatabase(firebaseApp);
+
+        let applyingRemote = false;
+        let firstMembersSnapshot = true;
+        let firstChatSnapshot = true;
+
+        const statusEl = document.getElementById("firebase-sync-status");
+        const setStatus = (text, online = true) => {
+            if (!statusEl) return;
+            statusEl.textContent = text;
+            statusEl.className = "text-[10px] mt-1 " + (online ? "text-cyan-500" : "text-red-400");
+        };
+
+        window.NVL_FIREBASE_SYNC = {
+            async pushState(state) {
+                if (applyingRemote) return;
+                try {
+                    await Promise.all([
+                        set(ref(db, "clan_members"), state.members || []),
+                        set(ref(db, "clan_chats"), state.chatMessages || [])
+                    ]);
+                    setStatus("● Firebase Live Sync: เชื่อมต่อแล้ว", true);
+                } catch (error) {
+                    console.error("Firebase sync error:", error);
+                    setStatus("● Firebase: เชื่อมต่อไม่ได้ — ใช้ LocalStorage ต่อได้", false);
+                }
+            }
+        };
+
+        onValue(ref(db, "clan_members"), (snapshot) => {
+            const remote = snapshot.val();
+
+            // ถ้ายังไม่มีข้อมูลบน Firebase ให้ใช้ข้อมูลจาก index.html เป็นชุดเริ่มต้น
+            if (remote === null) {
+                if (firstMembersSnapshot) {
+                    firstMembersSnapshot = false;
+                    const local = JSON.parse(localStorage.getItem("neverlose_members") || "null");
+                    if (local) window.NVL_FIREBASE_SYNC.pushState({
+                        members: local,
+                        chatMessages: JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]")
+                    });
+                }
+                return;
+            }
+
+            firstMembersSnapshot = false;
+            const incoming = Array.isArray(remote) ? remote : Object.values(remote);
+
+            applyingRemote = true;
+            localStorage.setItem("neverlose_members", JSON.stringify(incoming));
+
+            // ส่งข้อมูลกลับไปให้ index.html ซึ่งเป็นตัวหลัก
+            if (typeof window.NVL_APPLY_FIREBASE_STATE === "function") {
+                window.NVL_APPLY_FIREBASE_STATE({ members: incoming });
+            }
+
+            applyingRemote = false;
+            setStatus("● Firebase Live Sync: สมาชิกออนไลน์", true);
+        }, (error) => {
+            console.error("Firebase members listener:", error);
+            setStatus("● Firebase: อ่านสมาชิกไม่ได้", false);
+        });
+
+        onValue(ref(db, "clan_chats"), (snapshot) => {
+            const remote = snapshot.val();
+
+            if (remote === null) {
+                if (firstChatSnapshot) {
+                    firstChatSnapshot = false;
+                    const local = JSON.parse(localStorage.getItem("neverlose_chat_messages") || "[]");
+                    if (local.length) {
+                        window.NVL_FIREBASE_SYNC.pushState({
+                            members: JSON.parse(localStorage.getItem("neverlose_members") || "[]"),
+                            chatMessages: local
+                        });
+                    }
+                }
+                return;
+            }
+
+            firstChatSnapshot = false;
+            const incoming = Array.isArray(remote) ? remote : Object.values(remote);
+
+            applyingRemote = true;
+            localStorage.setItem("neverlose_chat_messages", JSON.stringify(incoming));
+
+            if (typeof window.NVL_APPLY_FIREBASE_STATE === "function") {
+                window.NVL_APPLY_FIREBASE_STATE({ chatMessages: incoming });
+            }
+
+            applyingRemote = false;
+            setStatus("● Firebase Live Sync: แชทออนไลน์", true);
+        }, (error) => {
+            console.error("Firebase chat listener:", error);
+            setStatus("● Firebase: อ่านแชทไม่ได้", false);
+        });
+
+        // Firebase listeners จะจัดการ initial sync ให้เอง
+    </script>
+</body>
+</html>
